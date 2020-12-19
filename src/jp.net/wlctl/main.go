@@ -26,6 +26,15 @@ func get_iface_path(bo dbus.BusObject) (obj_iface_path dbus.ObjectPath) {
 	return
 }
 
+func get_bss_property(conn *dbus.Conn, bss dbus.ObjectPath, prop string) interface{} {
+	bss_obj := conn.Object(DbusService, bss)
+	propval, err := bss_obj.GetProperty(DbusIface + ".BSS." + prop)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return propval.Value()
+}
+
 func main() {
 	flag.Parse()
 
@@ -62,6 +71,23 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Interface", *optIface, "no longer managed")
+	case "scan-results":
+		oip := get_iface_path(obj)
+		o := conn.Object(DbusService, oip)
+		if v, err := o.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
+			log.Print("SSID                             BSSID             Freq Sig")
+			log.Print("===========================================================")
+			bss_list := v.Value().([]dbus.ObjectPath)
+			for _, bss := range bss_list {
+				ssid := string(get_bss_property(conn, bss, "SSID").([]byte))
+				bssid := get_bss_property(conn, bss, "BSSID").([]byte)
+				freq := get_bss_property(conn, bss, "Frequency").(uint16)
+				signal := get_bss_property(conn, bss, "Signal").(int16)
+				log.Printf("%-32s %02x:%02x:%02x:%02x:%02x:%02x %d %d\n", ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5], freq, signal)
+			}
+		} else {
+			log.Fatal(err)
+		}
 	default:
 		log.Fatal("Wrong mode specified")
 	}
