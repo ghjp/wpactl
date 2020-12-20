@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/godbus/dbus/v5"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -101,6 +102,14 @@ func main() {
 		} else {
 			log.Fatal(err)
 		}
+	case "reconnect", "reassociate", "disconnect":
+		oip := get_iface_path(obj)
+		o := conn.Object(DbusService, oip)
+		cmd := strings.Title(*optMode)
+		if err = o.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
+			log.Fatal(err)
+		}
+		log.Println(cmd, "interface", *optIface)
 	default:
 		log.Fatal("Wrong mode specified")
 	}
