@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/godbus/dbus/v5"
 	"log"
+	"time"
 )
 
 var (
@@ -74,6 +75,18 @@ func main() {
 	case "scan-results":
 		oip := get_iface_path(obj)
 		o := conn.Object(DbusService, oip)
+		for {
+			if scan_is_ongoing, err := o.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
+				if scan_is_ongoing.Value().(bool) {
+					log.Print("Interface is still scanning. Waiting ...")
+					time.Sleep(2 * time.Second)
+				} else {
+					break
+				}
+			} else {
+				log.Fatal(err)
+			}
+		}
 		if v, err := o.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
 			log.Print("SSID                             BSSID             Freq Sig")
 			log.Print("===========================================================")
