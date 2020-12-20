@@ -1,4 +1,4 @@
-module jp.net/wlctl
+module jp.net/wpactl
 
 go 1.15
 
