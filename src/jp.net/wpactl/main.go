@@ -75,9 +75,9 @@ func main() {
 		log.Println("Interface", *optIface, "no longer managed")
 	case "scan-results":
 		oip := get_iface_path(obj)
-		o := conn.Object(DbusService, oip)
+		bo := conn.Object(DbusService, oip)
 		for {
-			if scan_is_ongoing, err := o.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
+			if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
 				if scan_is_ongoing.Value().(bool) {
 					log.Print("Interface is still scanning. Waiting ...")
 					time.Sleep(2 * time.Second)
@@ -88,7 +88,7 @@ func main() {
 				log.Fatal(err)
 			}
 		}
-		if v, err := o.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
+		if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
 			log.Print("SSID                             BSSID             Freq Sig")
 			log.Print("===========================================================")
 			bss_list := v.Value().([]dbus.ObjectPath)
@@ -104,9 +104,9 @@ func main() {
 		}
 	case "reconnect", "reassociate", "disconnect":
 		oip := get_iface_path(obj)
-		o := conn.Object(DbusService, oip)
+		bo := conn.Object(DbusService, oip)
 		cmd := strings.Title(*optMode)
-		if err = o.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
+		if err = bo.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
 			log.Fatal(err)
 		}
 		log.Println(cmd, "interface", *optIface)
