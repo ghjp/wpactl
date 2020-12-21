@@ -117,10 +117,16 @@ func main() {
 	case "status", "st":
 		oip := get_iface_path(obj)
 		bo := conn.Object(DbusService, oip)
+		if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
+			log.Printf("%-24s %v", "state", state)
+		} else {
+			log.Fatal(err)
+		}
 		if cnp, err := bo.GetProperty(DbusIface + ".Interface.CurrentNetwork"); err == nil {
 			cnp_opath := cnp.Value().(dbus.ObjectPath)
 			if cnp_opath == "/" {
-				log.Fatal("Doesn't use any network yet")
+				// Doesn't use given network yet. We are done
+				return
 			}
 			nobj := conn.Object(DbusService, cnp_opath)
 			if nprops, err := nobj.GetProperty(DbusIface + ".Network.Properties"); err == nil {
