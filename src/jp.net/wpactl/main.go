@@ -114,10 +114,11 @@ func main() {
 		oip := get_iface_path(obj)
 		bo := conn.Object(DbusService, oip)
 		if cnp, err := bo.GetProperty(DbusIface + ".Interface.CurrentNetwork"); err == nil {
-			if cnp.Value().(dbus.ObjectPath) == "/" {
+			cnp_opath := cnp.Value().(dbus.ObjectPath)
+			if cnp_opath == "/" {
 				log.Fatal("Doesn't use any network yet")
 			}
-			nobj := conn.Object(DbusService, cnp.Value().(dbus.ObjectPath))
+			nobj := conn.Object(DbusService, cnp_opath)
 			if nprops, err := nobj.GetProperty(DbusIface + ".Network.Properties"); err == nil {
 				prop_map := nprops.Value().(map[string]dbus.Variant)
 				for _, pname := range []string{"ssid", "mode", "pairwise", "group", "key_mgmt"} {
@@ -128,6 +129,10 @@ func main() {
 			}
 		} else {
 			log.Fatal(err)
+		}
+		if cbss, err := bo.GetProperty(DbusIface + ".Interface.CurrentBSS"); err == nil {
+			frequency := get_bss_property(conn, cbss.Value().(dbus.ObjectPath), "Frequency")
+			log.Printf("%-24s %v", "freq", frequency)
 		}
 	default:
 		log.Fatal("Wrong mode specified")
