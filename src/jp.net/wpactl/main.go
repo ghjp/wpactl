@@ -145,6 +145,19 @@ func main() {
 			log.Printf("%-24s %v", "privacy", privacy)
 			log.Printf("%-24s %vs", "age", age)
 		}
+	case "list", "ls":
+		if managed_ifaces, err := obj.GetProperty(DbusIface+".Interfaces"); err == nil {
+			for i, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
+				bo := conn.Object(DbusService, iface_opath)
+				if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
+					log.Println(i, ifname)
+				} else {
+					log.Fatal(err)
+				}
+			}
+		} else {
+			log.Fatal(err)
+		}
 	default:
 		log.Fatal("Wrong mode specified")
 	}
