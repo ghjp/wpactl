@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	optIface   = flag.String("i", "wlxf0b0148be468", "WLAN network interface name")
+	optIface   = flag.String("i", "wlan0", "WLAN network interface name")
 	optMode    = flag.String("m", "scan", "mode of operation: ´scan´, ´scan-results´, ´up´ or ´down´")
 	optVerbose = flag.Bool("v", false, "Be verbose")
 	optCfgFile = flag.String("c", "/etc/wpa_supplicant/wpa_supplicant.conf", "Configuration file path")
