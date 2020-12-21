@@ -48,7 +48,7 @@ func main() {
 
 	obj := conn.Object(DbusService, DbusPath)
 	switch *optMode {
-	case "scan":
+	case "scan", "sc":
 		obj_iface_path := get_iface_path(obj)
 		iface_obj := conn.Object(DbusService, obj_iface_path)
 		scan_args := make(map[string]interface{})
@@ -59,7 +59,7 @@ func main() {
 		if err = iface_obj.Call(DbusIface+".Interface.Scan", 0, scan_args).Err; err != nil {
 			log.Fatal(err)
 		}
-	case "up":
+	case "up", "u":
 		ci_args := make(map[string]interface{})
 		ci_args["Ifname"] = *optIface
 		ci_args["ConfigFile"] = *optCfgFile
@@ -67,13 +67,13 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Interface", *optIface, "now managed")
-	case "down":
+	case "down", "d":
 		oip := get_iface_path(obj)
 		if err = obj.Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
 			log.Fatal(err)
 		}
 		log.Println("Interface", *optIface, "no longer managed")
-	case "scan-results":
+	case "scan-results", "sr":
 		oip := get_iface_path(obj)
 		bo := conn.Object(DbusService, oip)
 		for {
@@ -89,15 +89,15 @@ func main() {
 			}
 		}
 		if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
-			log.Print("SSID                             BSSID             Freq Sig")
-			log.Print("===========================================================")
+			log.Print("SSID                             BSSID        Freq Sig")
+			log.Print("======================================================")
 			bss_list := v.Value().([]dbus.ObjectPath)
 			for _, bss := range bss_list {
 				ssid := string(get_bss_property(conn, bss, "SSID").([]byte))
 				bssid := get_bss_property(conn, bss, "BSSID").([]byte)
 				freq := get_bss_property(conn, bss, "Frequency").(uint16)
 				signal := get_bss_property(conn, bss, "Signal").(int16)
-				log.Printf("%-32s %02x:%02x:%02x:%02x:%02x:%02x %d %d\n", ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5], freq, signal)
+				log.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
 			}
 		} else {
 			log.Fatal(err)
@@ -110,7 +110,7 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println(cmd, "interface", *optIface)
-	case "status":
+	case "status", "st":
 		oip := get_iface_path(obj)
 		bo := conn.Object(DbusService, oip)
 		if cnp, err := bo.GetProperty(DbusIface + ".Interface.CurrentNetwork"); err == nil {
@@ -121,7 +121,7 @@ func main() {
 			nobj := conn.Object(DbusService, cnp_opath)
 			if nprops, err := nobj.GetProperty(DbusIface + ".Network.Properties"); err == nil {
 				prop_map := nprops.Value().(map[string]dbus.Variant)
-				for _, pname := range []string{"ssid", "mode", "pairwise", "group", "key_mgmt"} {
+				for _, pname := range []string{"ssid", "pairwise", "group", "key_mgmt"} {
 					log.Printf("%-24s %s", pname, prop_map[pname].Value().(string))
 				}
 			} else {
@@ -131,8 +131,19 @@ func main() {
 			log.Fatal(err)
 		}
 		if cbss, err := bo.GetProperty(DbusIface + ".Interface.CurrentBSS"); err == nil {
-			frequency := get_bss_property(conn, cbss.Value().(dbus.ObjectPath), "Frequency")
+			cbss_opath := cbss.Value().(dbus.ObjectPath)
+			bssid := get_bss_property(conn, cbss_opath, "BSSID")
+			frequency := get_bss_property(conn, cbss_opath, "Frequency")
+			mode := get_bss_property(conn, cbss_opath, "Mode")
+			signal := get_bss_property(conn, cbss_opath, "Signal")
+			privacy := get_bss_property(conn, cbss_opath, "Privacy")
+			age := get_bss_property(conn, cbss_opath, "Age")
+			log.Printf("%-24s %02x", "bssid", bssid)
+			log.Printf("%-24s %v", "mode", mode)
 			log.Printf("%-24s %v", "freq", frequency)
+			log.Printf("%-24s %v", "signal", signal)
+			log.Printf("%-24s %v", "privacy", privacy)
+			log.Printf("%-24s %vs", "age", age)
 		}
 	default:
 		log.Fatal("Wrong mode specified")
