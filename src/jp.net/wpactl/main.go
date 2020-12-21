@@ -102,7 +102,7 @@ func main() {
 		} else {
 			log.Fatal(err)
 		}
-	case "reconnect", "reassociate", "disconnect":
+	case "reconnect", "reassociate", "disconnect", "reattach":
 		oip := get_iface_path(obj)
 		bo := conn.Object(DbusService, oip)
 		cmd := strings.Title(*optMode)
