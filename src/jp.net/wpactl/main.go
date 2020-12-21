@@ -13,6 +13,7 @@ var (
 	optMode    = flag.String("m", "scan", "mode of operation: ´scan´, ´scan-results´, ´up´ or ´down´")
 	optVerbose = flag.Bool("v", false, "Be verbose")
 	optCfgFile = flag.String("c", "/etc/wpa_supplicant/wpa_supplicant.conf", "Configuration file path")
+	optDriver  = flag.String("D", "", "Driver to use")
 )
 
 const (
@@ -63,6 +64,9 @@ func main() {
 		ci_args := make(map[string]interface{})
 		ci_args["Ifname"] = *optIface
 		ci_args["ConfigFile"] = *optCfgFile
+		if len(*optDriver) > 0 {
+			ci_args["Driver"] = *optDriver
+		}
 		if err = obj.Call(DbusIface+".CreateInterface", 0, ci_args).Err; err != nil {
 			log.Fatal(err)
 		}
