@@ -50,6 +50,24 @@ func perform_netop(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
 	log.Println(cmd, "interface", ifname)
 }
 
+func list_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) error {
+	log.Println("====== Managed interfaces ======")
+	if managed_ifaces, err := obj.GetProperty(DbusIface + ".Interfaces"); err == nil {
+		for i, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
+			bo := conn.Object(DbusService, iface_opath)
+			if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
+				log.Println(i, ifname)
+			} else {
+				log.Fatal(err)
+			}
+		}
+	} else {
+		log.Fatal(err)
+	}
+	log.Print("Hint: use command ´up´ or ´down´ to integrate or disintegrate an interface")
+	return nil
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -64,8 +82,19 @@ func main() {
 		Authors: []*cli.Author{
 			{Name: "Dr. Johann Pfefferl", Email: "pfefferl@gmx.net"},
 		},
+		Action: func(c *cli.Context) error {
+			return list_managed_ifaces(c, conn, obj)
+		},
 		Usage: "control WPA supplicant through d-bus interface",
 		Commands: []*cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Action: func(c *cli.Context) error {
+					return list_managed_ifaces(c, conn, obj)
+				},
+				Usage: "list managed network interfaces",
+			},
 			{
 				Name:    "status",
 				Aliases: []string{"st"},
@@ -115,26 +144,6 @@ func main() {
 				Usage:       "get current WPA/EAPOL/EAP status",
 				ArgsUsage:   "<ifname>",
 				Description: "Show actual state of the given interface",
-			},
-			{
-				Name:    "list",
-				Aliases: []string{"ls"},
-				Action: func(c *cli.Context) error {
-					if managed_ifaces, err := obj.GetProperty(DbusIface + ".Interfaces"); err == nil {
-						for i, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
-							bo := conn.Object(DbusService, iface_opath)
-							if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
-								log.Println(i, ifname)
-							} else {
-								log.Fatal(err)
-							}
-						}
-					} else {
-						log.Fatal(err)
-					}
-					return nil
-				},
-				Usage: "list managed network interfaces",
 			},
 			{
 				Name:    "up",
