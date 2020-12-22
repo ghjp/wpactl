@@ -156,6 +156,10 @@ func main() {
 					if len(drv) > 0 {
 						ci_args["Driver"] = drv
 					}
+					brif := c.String("bridge")
+					if len(brif) > 0 {
+						ci_args["BridgeIfname"] = brif
+					}
 
 					if err = obj.Call(DbusIface+".CreateInterface", 0, ci_args).Err; err != nil {
 						log.Fatal(err)
@@ -175,6 +179,11 @@ func main() {
 						Name:    "driver",
 						Aliases: []string{"D"},
 						Usage:   "Driver name which the interface uses, e.g., nl80211",
+					},
+					&cli.StringFlag{
+						Name:    "bridge",
+						Aliases: []string{"b"},
+						Usage:   "Name of the bridge interface to control, e.g., br0",
 					},
 				},
 				Usage:       "bring up network interface",
