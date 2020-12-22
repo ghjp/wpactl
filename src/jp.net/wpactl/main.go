@@ -50,13 +50,14 @@ func perform_netop(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
 	log.Println(cmd, "interface", ifname)
 }
 
-func list_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) error {
+func get_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) []string {
+	var result []string
 	log.Println("====== Managed interfaces ======")
 	if managed_ifaces, err := obj.GetProperty(DbusIface + ".Interfaces"); err == nil {
-		for i, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
+		for _, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
 			bo := conn.Object(DbusService, iface_opath)
 			if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
-				log.Println(i, ifname)
+				result = append(result, ifname.Value().(string))
 			} else {
 				log.Fatal(err)
 			}
@@ -64,8 +65,14 @@ func list_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) er
 	} else {
 		log.Fatal(err)
 	}
-	log.Print("Hint: use command ´up´ or ´down´ to integrate or disintegrate an interface")
-	return nil
+	return result
+}
+
+func list_ifaces(ifnames []string) {
+	for i, iname := range ifnames {
+		log.Println(i, iname)
+	}
+	log.Print("\tHint: use command ´up´ or ´down´ to integrate or disintegrate an interface")
 }
 
 func main() {
@@ -83,7 +90,8 @@ func main() {
 			{Name: "Dr. Johann Pfefferl", Email: "pfefferl@gmx.net"},
 		},
 		Action: func(c *cli.Context) error {
-			return list_managed_ifaces(c, conn, obj)
+			list_ifaces(get_managed_ifaces(c, conn, obj))
+			return nil
 		},
 		Usage: "control WPA supplicant through d-bus interface",
 		Commands: []*cli.Command{
@@ -91,7 +99,8 @@ func main() {
 				Name:    "list",
 				Aliases: []string{"ls"},
 				Action: func(c *cli.Context) error {
-					return list_managed_ifaces(c, conn, obj)
+					list_ifaces(get_managed_ifaces(c, conn, obj))
+					return nil
 				},
 				Usage: "list managed network interfaces",
 			},
