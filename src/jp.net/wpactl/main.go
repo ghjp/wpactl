@@ -75,6 +75,38 @@ func list_ifaces(ifnames []string) {
 	log.Print("\tHint: use command ´up´ or ´down´ to integrate or disintegrate an interface")
 }
 
+func show_scan_results(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+	ifname := get_network_interface(c)
+	oip := get_iface_path(obj, ifname)
+	bo := conn.Object(DbusService, oip)
+	for {
+		if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
+			if scan_is_ongoing.Value().(bool) {
+				log.Print("Interface is still scanning. Waiting ...")
+				time.Sleep(2 * time.Second)
+			} else {
+				break
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+	if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
+		log.Print("SSID                             BSSID        Freq Sig")
+		log.Print("======================================================")
+		bss_list := v.Value().([]dbus.ObjectPath)
+		for _, bss := range bss_list {
+			ssid := string(get_bss_property(conn, bss, "SSID").([]byte))
+			bssid := get_bss_property(conn, bss, "BSSID").([]byte)
+			freq := get_bss_property(conn, bss, "Frequency").(uint16)
+			signal := get_bss_property(conn, bss, "Signal").(int16)
+			log.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
+		}
+	} else {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -230,6 +262,9 @@ func main() {
 					if err = iface_obj.Call(DbusIface+".Interface.Scan", 0, scan_args).Err; err != nil {
 						log.Fatal(err)
 					}
+					if c.Bool("results") {
+						show_scan_results(c, conn, obj)
+					}
 					return nil
 				},
 				Usage:     "search for wlan networks on given interface",
@@ -247,41 +282,19 @@ func main() {
 						Value:   true,
 						Usage:   "´true´ (or absent) to allow a roaming decision based on the results of this scan, ´false´ to prevent a roaming decision.",
 					},
+					&cli.BoolFlag{
+						Name:    "results",
+						Aliases: []string{"r"},
+						Value:   false,
+						Usage:   "Wait and show scan results",
+					},
 				},
 			},
 			{
 				Name:    "scan-results",
 				Aliases: []string{"sr", "scr"},
 				Action: func(c *cli.Context) error {
-					ifname := get_network_interface(c)
-					oip := get_iface_path(obj, ifname)
-					bo := conn.Object(DbusService, oip)
-					for {
-						if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
-							if scan_is_ongoing.Value().(bool) {
-								log.Print("Interface is still scanning. Waiting ...")
-								time.Sleep(2 * time.Second)
-							} else {
-								break
-							}
-						} else {
-							log.Fatal(err)
-						}
-					}
-					if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
-						log.Print("SSID                             BSSID        Freq Sig")
-						log.Print("======================================================")
-						bss_list := v.Value().([]dbus.ObjectPath)
-						for _, bss := range bss_list {
-							ssid := string(get_bss_property(conn, bss, "SSID").([]byte))
-							bssid := get_bss_property(conn, bss, "BSSID").([]byte)
-							freq := get_bss_property(conn, bss, "Frequency").(uint16)
-							signal := get_bss_property(conn, bss, "Signal").(int16)
-							log.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
-						}
-					} else {
-						log.Fatal(err)
-					}
+					show_scan_results(c, conn, obj)
 					return nil
 				},
 				Usage:       "get latest scan results",
