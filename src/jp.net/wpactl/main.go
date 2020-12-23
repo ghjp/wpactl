@@ -39,15 +39,19 @@ func get_network_interface(c *cli.Context) string {
 	return args.First()
 }
 
-func perform_netop(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+func get_obj_iface_path_of_iface(c *cli.Context, obj dbus.BusObject) (string, dbus.ObjectPath) {
 	ifname := get_network_interface(c)
-	oip := get_iface_path(obj, ifname)
+	return ifname, get_iface_path(obj, ifname)
+}
+
+func perform_netop(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+	ifn, oip := get_obj_iface_path_of_iface(c, obj)
 	bo := conn.Object(DbusService, oip)
 	cmd := strings.Title(c.Command.Name)
 	if err := bo.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
 		log.Fatal(err)
 	}
-	log.Println(cmd, "interface", ifname)
+	log.Println(cmd, "interface", ifn)
 }
 
 func get_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) []string {
@@ -76,8 +80,7 @@ func list_ifaces(ifnames []string) {
 }
 
 func show_scan_results(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
-	ifname := get_network_interface(c)
-	oip := get_iface_path(obj, ifname)
+	_, oip := get_obj_iface_path_of_iface(c, obj)
 	bo := conn.Object(DbusService, oip)
 	for {
 		if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
@@ -140,9 +143,10 @@ func main() {
 				Name:    "status",
 				Aliases: []string{"st"},
 				Action: func(c *cli.Context) error {
-					oip := get_iface_path(obj, get_network_interface(c))
+					ifn, oip := get_obj_iface_path_of_iface(c, obj)
 					bo := conn.Object(DbusService, oip)
 					if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
+						log.Printf("%-24s %s", "interface", ifn)
 						log.Printf("%-24s %v", "state", state)
 					} else {
 						log.Fatal(err)
@@ -235,8 +239,7 @@ func main() {
 				Name:    "down",
 				Aliases: []string{"d"},
 				Action: func(c *cli.Context) error {
-					ifname := get_network_interface(c)
-					oip := get_iface_path(obj, ifname)
+					ifname, oip := get_obj_iface_path_of_iface(c, obj)
 					if err = obj.Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
 						log.Fatal(err)
 					}
@@ -251,14 +254,13 @@ func main() {
 				Name:    "scan",
 				Aliases: []string{"sc"},
 				Action: func(c *cli.Context) error {
-					ifname := get_network_interface(c)
-					obj_iface_path := get_iface_path(obj, ifname)
-					iface_obj := conn.Object(DbusService, obj_iface_path)
+					ifn, oip := get_obj_iface_path_of_iface(c, obj)
+					iface_obj := conn.Object(DbusService, oip)
 					scan_args := make(map[string]interface{})
 					scan_args["Type"] = c.String("type")
 					scan_args["AllowRoam"] = c.Bool("allow-roam")
 
-					log.Println("Trigger scan on interface", ifname)
+					log.Println("Trigger scan on interface", ifn)
 					if err = iface_obj.Call(DbusIface+".Interface.Scan", 0, scan_args).Err; err != nil {
 						log.Fatal(err)
 					}
@@ -339,6 +341,25 @@ func main() {
 				Aliases: []string{"rat"},
 				Action: func(c *cli.Context) error {
 					perform_netop(c, conn, obj)
+					return nil
+				},
+				Usage:       "force reassociation back to the same BSS",
+				ArgsUsage:   "<ifname>",
+				Description: "Reattach the given interface",
+			},
+			{
+				Name:    "signal_poll",
+				Aliases: []string{"sig"},
+				Action: func(c *cli.Context) error {
+					_, oip := get_obj_iface_path_of_iface(c, obj)
+					bo := conn.Object(DbusService, oip)
+					var siginfo map[string]dbus.Variant
+					if err := bo.Call(DbusIface+".Interface.SignalPoll", 0).Store(&siginfo); err != nil {
+						log.Fatal(err)
+					}
+					for signame, sigval := range siginfo {
+						log.Printf("%-10s %v", signame, sigval)
+					}
 					return nil
 				},
 				Usage:       "force reassociation back to the same BSS",
