@@ -547,6 +547,57 @@ func main() {
 							},
 						},
 					},
+					{
+						Name: "add",
+						Action: func(c *cli.Context) error {
+							_, oip := get_obj_iface_path_of_iface(c, obj)
+							bo := conn.Object(DbusService, oip)
+							add_args := make(map[string]interface{})
+							s := c.String("ssid")
+							if len(s) > 0 {
+								add_args["ssid"] = s
+							}
+							psk := c.String("psk")
+							if len(psk) > 0 {
+								add_args["psk"] = c.String("psk")
+							}
+							if c.Bool("disabled") {
+								add_args["disabled"] = 1
+							} else {
+								add_args["disabled"] = 0
+							}
+							var result string
+							if err := bo.Call(DbusIface+".Interface.AddNetwork", 0, add_args).Store(&result); err != nil {
+								log.Fatal(err)
+							}
+							log.Print(result)
+							return nil
+						},
+						Usage:     "add a network entry",
+						ArgsUsage: "<ifname>",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "ssid",
+								Aliases: []string{"s"},
+								Usage:   "SSID of the entry",
+							},
+							&cli.StringFlag{
+								Name:    "psk",
+								Aliases: []string{"password", "pw", "p"},
+								Usage:   "Preshared key (aka. password)",
+							},
+							&cli.BoolFlag{
+								Name:  "disabled",
+								Value: false,
+								Usage: "Initial state of the entry",
+							},
+							&cli.BoolFlag{
+								Name:    "results",
+								Aliases: []string{"r"},
+								Usage:   "Show resulting network list",
+							},
+						},
+					},
 				},
 				Usage:     "operation on configured networks",
 				ArgsUsage: "<ifname>",
