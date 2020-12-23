@@ -440,9 +440,10 @@ func main() {
 						Description: "Disable the network by given index name",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
-								Name:  "id",
-								Value: -1,
-								Usage: "Id number of the network to disable",
+								Name:     "id",
+								Aliases:  []string{"i"},
+								Required: true,
+								Usage:    "Id number of the network to disable",
 							},
 							&cli.BoolFlag{
 								Name:    "results",
@@ -462,9 +463,10 @@ func main() {
 						Description: "Enable the network by given index",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
-								Name:  "id",
-								Value: -1,
-								Usage: "Id number of the network to enable",
+								Name:     "id",
+								Aliases:  []string{"i"},
+								Required: true,
+								Usage:    "Id number of the network to enable",
 							},
 							&cli.BoolFlag{
 								Name:    "results",
@@ -497,9 +499,10 @@ func main() {
 						Description: "Remove the network by given index",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
-								Name:  "id",
-								Value: -1,
-								Usage: "Id number of the network to remove",
+								Name:     "id",
+								Aliases:  []string{"i"},
+								Required: true,
+								Usage:    "Id number of the network to remove",
 							},
 							&cli.BoolFlag{
 								Name:    "results",
@@ -522,6 +525,9 @@ func main() {
 									break
 								}
 							}
+							if c.Bool("results") {
+								network_show_list(c, conn, obj)
+							}
 							return nil
 						},
 						Usage:       "select a network entry",
@@ -529,9 +535,15 @@ func main() {
 						Description: "Select the network by given index. The others are disabled automatically",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
-								Name:  "id",
-								Value: -1,
-								Usage: "Id number of the network to select",
+								Name:     "id",
+								Aliases:  []string{"i"},
+								Required: true,
+								Usage:    "Id number of the network to select",
+							},
+							&cli.BoolFlag{
+								Name:    "results",
+								Aliases: []string{"r"},
+								Usage:   "Show resulting network list",
 							},
 						},
 					},
