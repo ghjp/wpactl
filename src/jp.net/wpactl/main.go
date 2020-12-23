@@ -157,6 +157,7 @@ func main() {
 					bo := conn.Object(DbusService, oip)
 					if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
 						log.Printf("%-24s %s", "interface", ifn)
+						log.Printf("%-24s %v", "dbus interface", oip)
 						log.Printf("%-24s %v", "state", state)
 					} else {
 						log.Fatal(err)
