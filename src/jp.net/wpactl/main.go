@@ -508,6 +508,33 @@ func main() {
 							},
 						},
 					},
+					{
+						Name: "select",
+						Action: func(c *cli.Context) error {
+							_, oip := get_obj_iface_path_of_iface(c, obj)
+							bo := conn.Object(DbusService, oip)
+							to_select_id := c.Int("id")
+							for idx, netobj := range network_get_obj_list(c, conn, obj) {
+								if idx == to_select_id {
+									if err := bo.Call(DbusIface+".Interface.SelectNetwork", 0, netobj).Err; err != nil {
+										log.Fatal(err)
+									}
+									break
+								}
+							}
+							return nil
+						},
+						Usage:       "select a network entry",
+						ArgsUsage:   "<ifname>",
+						Description: "Select the network by given index. The others are disabled automatically",
+						Flags: []cli.Flag{
+							&cli.IntFlag{
+								Name:  "id",
+								Value: -1,
+								Usage: "Id number of the network to select",
+							},
+						},
+					},
 				},
 				Usage:     "operation on configured networks",
 				ArgsUsage: "<ifname>",
