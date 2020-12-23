@@ -373,24 +373,34 @@ func main() {
 				Description: "Reattach the given interface",
 			},
 			{
-				Name:    "list_networks",
-				Aliases: []string{"ln"},
-				Action: func(c *cli.Context) error {
-					_, oip := get_obj_iface_path_of_iface(c, obj)
-					bo := conn.Object(DbusService, oip)
-					if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
-						for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
-							nprops := get_network_properties(c, conn, nwobj)
-							log.Printf("% 2d %s", i, nprops["ssid"].Value().(string))
-						}
-					} else {
-						log.Fatal(err)
-					}
-					return nil
+				Name:    "networks",
+				Aliases: []string{"nw"},
+				Subcommands: []*cli.Command{
+					{
+						Name:    "list",
+						Aliases: []string{"ls"},
+						Action: func(c *cli.Context) error {
+							_, oip := get_obj_iface_path_of_iface(c, obj)
+							bo := conn.Object(DbusService, oip)
+							if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
+								log.Printf("Id SSID                             Dis")
+								log.Printf("=======================================")
+								for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
+									nprops := get_network_properties(c, conn, nwobj)
+									log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
+								}
+							} else {
+								log.Fatal(err)
+							}
+							return nil
+						},
+						Usage:       "list configured networks",
+						ArgsUsage:   "<ifname>",
+						Description: "Report networks which are defined in the config files or added afterwards for the given interface",
+					},
 				},
-				Usage:       "list configured networks",
-				ArgsUsage:   "<ifname>",
-				Description: "Report networks which are defined in the config files or added afterwards for the given interface",
+				Usage:     "operation on configured networks",
+				ArgsUsage: "<ifname>",
 			},
 		},
 	}
