@@ -110,6 +110,16 @@ func show_scan_results(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
 	}
 }
 
+func get_network_properties(c *cli.Context, conn *dbus.Conn, netobj dbus.ObjectPath) (retval map[string]dbus.Variant) {
+	bo := conn.Object(DbusService, netobj)
+	if nwprops, err := bo.GetProperty(DbusIface + ".Network.Properties"); err == nil {
+		retval = nwprops.Value().(map[string]dbus.Variant)
+	} else {
+		log.Fatal(err)
+	}
+	return
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -132,7 +142,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:    "interface",
-				Aliases: []string{"list", "ls"},
+				Aliases: []string{"if", "ls"},
 				Action: func(c *cli.Context) error {
 					list_ifaces(get_managed_ifaces(c, conn, obj))
 					return nil
@@ -157,14 +167,9 @@ func main() {
 							// Doesn't use given network yet. We are done
 							return nil
 						}
-						nobj := conn.Object(DbusService, cnp_opath)
-						if nprops, err := nobj.GetProperty(DbusIface + ".Network.Properties"); err == nil {
-							prop_map := nprops.Value().(map[string]dbus.Variant)
-							for _, pname := range []string{"ssid", "pairwise", "group", "key_mgmt"} {
-								log.Printf("%-24s %s", pname, prop_map[pname].Value().(string))
-							}
-						} else {
-							log.Fatal(err)
+						prop_map := get_network_properties(c, conn, cnp_opath)
+						for _, pname := range []string{"ssid", "pairwise", "group", "key_mgmt"} {
+							log.Printf("%-24s %s", pname, prop_map[pname].Value().(string))
 						}
 					} else {
 						log.Fatal(err)
@@ -365,6 +370,26 @@ func main() {
 				Usage:       "force reassociation back to the same BSS",
 				ArgsUsage:   "<ifname>",
 				Description: "Reattach the given interface",
+			},
+			{
+				Name:    "list_networks",
+				Aliases: []string{"ln"},
+				Action: func(c *cli.Context) error {
+					_, oip := get_obj_iface_path_of_iface(c, obj)
+					bo := conn.Object(DbusService, oip)
+					if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
+						for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
+							nprops := get_network_properties(c, conn, nwobj)
+							log.Printf("% 2d %s", i, nprops["ssid"].Value().(string))
+						}
+					} else {
+						log.Fatal(err)
+					}
+					return nil
+				},
+				Usage:       "list configured networks",
+				ArgsUsage:   "<ifname>",
+				Description: "Report networks which are defined in the config files or added afterwards for the given interface",
 			},
 		},
 	}
