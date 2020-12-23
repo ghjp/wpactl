@@ -120,18 +120,23 @@ func get_network_properties(c *cli.Context, conn *dbus.Conn, netobj dbus.ObjectP
 	return
 }
 
-func network_show_list(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+func network_get_obj_list(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) []dbus.ObjectPath {
 	_, oip := get_obj_iface_path_of_iface(c, obj)
 	bo := conn.Object(DbusService, oip)
 	if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
-		log.Printf("Id SSID                             Dis")
-		log.Printf("=======================================")
-		for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
-			nprops := get_network_properties(c, conn, nwobj)
-			log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
-		}
+		return nwlist.Value().([]dbus.ObjectPath)
 	} else {
 		log.Fatal(err)
+	}
+	return nil
+}
+
+func network_show_list(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+	log.Printf("Id SSID                             Dis")
+	log.Printf("=======================================")
+	for i, nwobj := range network_get_obj_list(c, conn, obj) {
+		nprops := get_network_properties(c, conn, nwobj)
+		log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
 	}
 }
 
@@ -460,6 +465,41 @@ func main() {
 								Name:  "id",
 								Value: -1,
 								Usage: "Id number of the network to enable",
+							},
+							&cli.BoolFlag{
+								Name:    "results",
+								Aliases: []string{"r"},
+								Usage:   "Show resulting network list",
+							},
+						},
+					},
+					{
+						Name: "remove",
+						Action: func(c *cli.Context) error {
+							_, oip := get_obj_iface_path_of_iface(c, obj)
+							bo := conn.Object(DbusService, oip)
+							to_remove_id := c.Int("id")
+							for idx, netobj := range network_get_obj_list(c, conn, obj) {
+								if idx == to_remove_id {
+									if err := bo.Call(DbusIface+".Interface.RemoveNetwork", 0, netobj).Err; err != nil {
+										log.Fatal(err)
+									}
+									break
+								}
+							}
+							if c.Bool("results") {
+								network_show_list(c, conn, obj)
+							}
+							return nil
+						},
+						Usage:       "remove a network entry",
+						ArgsUsage:   "<ifname>",
+						Description: "Remove the network by given index",
+						Flags: []cli.Flag{
+							&cli.IntFlag{
+								Name:  "id",
+								Value: -1,
+								Usage: "Id number of the network to remove",
 							},
 							&cli.BoolFlag{
 								Name:    "results",
