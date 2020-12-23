@@ -120,6 +120,25 @@ func get_network_properties(c *cli.Context, conn *dbus.Conn, netobj dbus.ObjectP
 	return
 }
 
+func network_set_state(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject, state bool) {
+	_, oip := get_obj_iface_path_of_iface(c, obj)
+	bo := conn.Object(DbusService, oip)
+	if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
+		to_change_id := c.Int("id")
+		for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
+			if i == to_change_id {
+				bo = conn.Object(DbusService, nwobj)
+				if err = bo.SetProperty(DbusService+".Network.Enabled", dbus.MakeVariant(state)); err != nil {
+					log.Fatal(err)
+				}
+				break
+			}
+		}
+	} else {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -397,6 +416,40 @@ func main() {
 						Usage:       "list configured networks",
 						ArgsUsage:   "<ifname>",
 						Description: "Report networks which are defined in the config files or added afterwards for the given interface",
+					},
+					{
+						Name: "disable",
+						Action: func(c *cli.Context) error {
+							network_set_state(c, conn, obj, false)
+							return nil
+						},
+						Usage:       "disable a network",
+						ArgsUsage:   "<ifname>",
+						Description: "Disable the network by given index or ssid name",
+						Flags: []cli.Flag{
+							&cli.IntFlag{
+								Name:  "id",
+								Value: -1,
+								Usage: "Id number of the network to disable",
+							},
+						},
+					},
+					{
+						Name: "enable",
+						Action: func(c *cli.Context) error {
+							network_set_state(c, conn, obj, true)
+							return nil
+						},
+						Usage:       "enable a network",
+						ArgsUsage:   "<ifname>",
+						Description: "Enable the network by given index or ssid name",
+						Flags: []cli.Flag{
+							&cli.IntFlag{
+								Name:  "id",
+								Value: -1,
+								Usage: "Id number of the network to enable",
+							},
+						},
 					},
 				},
 				Usage:     "operation on configured networks",
