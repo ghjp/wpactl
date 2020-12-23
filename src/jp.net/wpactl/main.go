@@ -120,6 +120,21 @@ func get_network_properties(c *cli.Context, conn *dbus.Conn, netobj dbus.ObjectP
 	return
 }
 
+func network_show_list(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+	_, oip := get_obj_iface_path_of_iface(c, obj)
+	bo := conn.Object(DbusService, oip)
+	if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
+		log.Printf("Id SSID                             Dis")
+		log.Printf("=======================================")
+		for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
+			nprops := get_network_properties(c, conn, nwobj)
+			log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
+		}
+	} else {
+		log.Fatal(err)
+	}
+}
+
 func network_set_state(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject, state bool) {
 	_, oip := get_obj_iface_path_of_iface(c, obj)
 	bo := conn.Object(DbusService, oip)
@@ -133,6 +148,9 @@ func network_set_state(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject, stat
 				}
 				break
 			}
+		}
+		if c.Bool("results") {
+			network_show_list(c, conn, obj)
 		}
 	} else {
 		log.Fatal(err)
@@ -399,18 +417,7 @@ func main() {
 						Name:    "list",
 						Aliases: []string{"ls"},
 						Action: func(c *cli.Context) error {
-							_, oip := get_obj_iface_path_of_iface(c, obj)
-							bo := conn.Object(DbusService, oip)
-							if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
-								log.Printf("Id SSID                             Dis")
-								log.Printf("=======================================")
-								for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
-									nprops := get_network_properties(c, conn, nwobj)
-									log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
-								}
-							} else {
-								log.Fatal(err)
-							}
+							network_show_list(c, conn, obj)
 							return nil
 						},
 						Usage:       "list configured networks",
@@ -423,14 +430,19 @@ func main() {
 							network_set_state(c, conn, obj, false)
 							return nil
 						},
-						Usage:       "disable a network",
+						Usage:       "disable a network entry",
 						ArgsUsage:   "<ifname>",
-						Description: "Disable the network by given index or ssid name",
+						Description: "Disable the network by given index name",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
 								Name:  "id",
 								Value: -1,
 								Usage: "Id number of the network to disable",
+							},
+							&cli.BoolFlag{
+								Name:    "results",
+								Aliases: []string{"r"},
+								Usage:   "Show resulting network list",
 							},
 						},
 					},
@@ -440,14 +452,19 @@ func main() {
 							network_set_state(c, conn, obj, true)
 							return nil
 						},
-						Usage:       "enable a network",
+						Usage:       "enable a network entry",
 						ArgsUsage:   "<ifname>",
-						Description: "Enable the network by given index or ssid name",
+						Description: "Enable the network by given index",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
 								Name:  "id",
 								Value: -1,
 								Usage: "Id number of the network to enable",
+							},
+							&cli.BoolFlag{
+								Name:    "results",
+								Aliases: []string{"r"},
+								Usage:   "Show resulting network list",
 							},
 						},
 					},
