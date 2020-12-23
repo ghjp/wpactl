@@ -131,8 +131,8 @@ func main() {
 		Usage: "control WPA supplicant through d-bus interface",
 		Commands: []*cli.Command{
 			{
-				Name:    "list",
-				Aliases: []string{"ls"},
+				Name:    "interface",
+				Aliases: []string{"list", "ls"},
 				Action: func(c *cli.Context) error {
 					list_ifaces(get_managed_ifaces(c, conn, obj))
 					return nil
