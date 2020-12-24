@@ -162,6 +162,48 @@ func network_set_state(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject, stat
 	}
 }
 
+func show_status(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) {
+	ifn, oip := get_obj_iface_path_of_iface(c, obj)
+	bo := conn.Object(DbusService, oip)
+	log.Print("Interface status")
+	log.Print("================")
+	if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
+		log.Printf("%-24s %s", "interface", ifn)
+		log.Printf("%-24s %v", "dbus interface", oip)
+		log.Printf("%-24s %v", "state", state)
+	} else {
+		log.Fatal(err)
+	}
+	if cnp, err := bo.GetProperty(DbusIface + ".Interface.CurrentNetwork"); err == nil {
+		cnp_opath := cnp.Value().(dbus.ObjectPath)
+		if cnp_opath == "/" {
+			// Doesn't use given network yet. We are done
+			return
+		}
+		prop_map := get_network_properties(c, conn, cnp_opath)
+		for _, pname := range []string{"ssid", "pairwise", "group", "key_mgmt"} {
+			log.Printf("%-24s %s", pname, prop_map[pname].Value().(string))
+		}
+	} else {
+		log.Fatal(err)
+	}
+	if cbss, err := bo.GetProperty(DbusIface + ".Interface.CurrentBSS"); err == nil {
+		cbss_opath := cbss.Value().(dbus.ObjectPath)
+		bssid := get_bss_property(conn, cbss_opath, "BSSID")
+		frequency := get_bss_property(conn, cbss_opath, "Frequency")
+		mode := get_bss_property(conn, cbss_opath, "Mode")
+		signal := get_bss_property(conn, cbss_opath, "Signal")
+		privacy := get_bss_property(conn, cbss_opath, "Privacy")
+		age := get_bss_property(conn, cbss_opath, "Age")
+		log.Printf("%-24s %02x", "bssid", bssid)
+		log.Printf("%-24s %v", "mode", mode)
+		log.Printf("%-24s %v", "freq", frequency)
+		log.Printf("%-24s %v", "signal", signal)
+		log.Printf("%-24s %v", "privacy", privacy)
+		log.Printf("%-24s %vs", "age", age)
+	}
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -195,43 +237,7 @@ func main() {
 				Name:    "status",
 				Aliases: []string{"st"},
 				Action: func(c *cli.Context) error {
-					ifn, oip := get_obj_iface_path_of_iface(c, obj)
-					bo := conn.Object(DbusService, oip)
-					if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
-						log.Printf("%-24s %s", "interface", ifn)
-						log.Printf("%-24s %v", "dbus interface", oip)
-						log.Printf("%-24s %v", "state", state)
-					} else {
-						log.Fatal(err)
-					}
-					if cnp, err := bo.GetProperty(DbusIface + ".Interface.CurrentNetwork"); err == nil {
-						cnp_opath := cnp.Value().(dbus.ObjectPath)
-						if cnp_opath == "/" {
-							// Doesn't use given network yet. We are done
-							return nil
-						}
-						prop_map := get_network_properties(c, conn, cnp_opath)
-						for _, pname := range []string{"ssid", "pairwise", "group", "key_mgmt"} {
-							log.Printf("%-24s %s", pname, prop_map[pname].Value().(string))
-						}
-					} else {
-						log.Fatal(err)
-					}
-					if cbss, err := bo.GetProperty(DbusIface + ".Interface.CurrentBSS"); err == nil {
-						cbss_opath := cbss.Value().(dbus.ObjectPath)
-						bssid := get_bss_property(conn, cbss_opath, "BSSID")
-						frequency := get_bss_property(conn, cbss_opath, "Frequency")
-						mode := get_bss_property(conn, cbss_opath, "Mode")
-						signal := get_bss_property(conn, cbss_opath, "Signal")
-						privacy := get_bss_property(conn, cbss_opath, "Privacy")
-						age := get_bss_property(conn, cbss_opath, "Age")
-						log.Printf("%-24s %02x", "bssid", bssid)
-						log.Printf("%-24s %v", "mode", mode)
-						log.Printf("%-24s %v", "freq", frequency)
-						log.Printf("%-24s %v", "signal", signal)
-						log.Printf("%-24s %v", "privacy", privacy)
-						log.Printf("%-24s %vs", "age", age)
-					}
+					show_status(c, conn, obj)
 					return nil
 				},
 				Usage:       "get current WPA/EAPOL/EAP status",
@@ -528,6 +534,9 @@ func main() {
 							if c.Bool("results") {
 								network_show_list(c, conn, obj)
 							}
+							if c.Bool("status") {
+								show_status(c, conn, obj)
+							}
 							return nil
 						},
 						Usage:       "select a network entry",
@@ -544,6 +553,12 @@ func main() {
 								Name:    "results",
 								Aliases: []string{"r"},
 								Usage:   "Show resulting network list",
+							},
+							&cli.BoolFlag{
+								Name:    "status",
+								Aliases: []string{"s"},
+								Value:   false,
+								Usage:   "Show status of interface",
 							},
 						},
 					},
