@@ -4,7 +4,6 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/urfave/cli/v2"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -620,5 +619,5 @@ func main() {
 		},
 	}
 
-	app.Run(os.Args)
+	app.RunAndExitOnError()
 }
