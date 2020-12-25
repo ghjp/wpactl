@@ -414,9 +414,8 @@ func main() {
 					}
 					return nil
 				},
-				Usage:       "force reassociation back to the same BSS",
+				Usage:       "get signal parameters",
 				ArgsUsage:   "<ifname>",
-				Description: "Reattach the given interface",
 			},
 			{
 				Name: "networks",
