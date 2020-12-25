@@ -225,7 +225,6 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:    "interface",
-				Aliases: []string{"if", "ls"},
 				Action: func(c *cli.Context) error {
 					list_ifaces(get_managed_ifaces(c, conn, obj))
 					return nil
@@ -245,7 +244,6 @@ func main() {
 			},
 			{
 				Name:    "up",
-				Aliases: []string{"u"},
 				Action: func(c *cli.Context) error {
 					ci_args := make(map[string]interface{})
 					ci_args["Ifname"] = get_network_interface(c)
@@ -290,7 +288,7 @@ func main() {
 			},
 			{
 				Name:    "down",
-				Aliases: []string{"d"},
+				Aliases: []string{"dn"},
 				Action: func(c *cli.Context) error {
 					ifname, oip := get_obj_iface_path_of_iface(c, obj)
 					if err = obj.Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
@@ -402,7 +400,6 @@ func main() {
 			},
 			{
 				Name:    "signal_poll",
-				Aliases: []string{"sig"},
 				Action: func(c *cli.Context) error {
 					_, oip := get_obj_iface_path_of_iface(c, obj)
 					bo := conn.Object(DbusService, oip)
@@ -421,7 +418,6 @@ func main() {
 			},
 			{
 				Name:    "networks",
-				Aliases: []string{"nw"},
 				Subcommands: []*cli.Command{
 					{
 						Name:    "list",
