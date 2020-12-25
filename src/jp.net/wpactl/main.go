@@ -538,7 +538,7 @@ func main() {
 							}
 							return nil
 						},
-						Usage:       "select a network entry",
+						Usage:       "select a network entry and disable the others",
 						ArgsUsage:   "<ifname>",
 						Description: "Select the network by given index. The others are disabled automatically",
 						Flags: []cli.Flag{
