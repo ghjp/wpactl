@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/godbus/dbus/v5"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -60,7 +61,12 @@ func get_managed_ifaces(c *cli.Context, conn *dbus.Conn, obj dbus.BusObject) []s
 		for _, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
 			bo := conn.Object(DbusService, iface_opath)
 			if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
-				result = append(result, ifname.Value().(string))
+				if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
+					line := fmt.Sprintf("%-20v %v", ifname.Value(), state.Value())
+					result = append(result, line)
+				} else {
+					log.Fatal(err)
+				}
 			} else {
 				log.Fatal(err)
 			}
@@ -224,7 +230,7 @@ func main() {
 		Usage: "control WPA supplicant through d-bus interface",
 		Commands: []*cli.Command{
 			{
-				Name:    "interface",
+				Name: "interface",
 				Action: func(c *cli.Context) error {
 					list_ifaces(get_managed_ifaces(c, conn, obj))
 					return nil
@@ -243,7 +249,7 @@ func main() {
 				Description: "Show actual state of the given interface",
 			},
 			{
-				Name:    "up",
+				Name: "up",
 				Action: func(c *cli.Context) error {
 					ci_args := make(map[string]interface{})
 					ci_args["Ifname"] = get_network_interface(c)
@@ -399,7 +405,7 @@ func main() {
 				Description: "Reattach the given interface",
 			},
 			{
-				Name:    "signal_poll",
+				Name: "signal_poll",
 				Action: func(c *cli.Context) error {
 					_, oip := get_obj_iface_path_of_iface(c, obj)
 					bo := conn.Object(DbusService, oip)
@@ -417,7 +423,7 @@ func main() {
 				Description: "Reattach the given interface",
 			},
 			{
-				Name:    "networks",
+				Name: "networks",
 				Subcommands: []*cli.Command{
 					{
 						Name:    "list",
