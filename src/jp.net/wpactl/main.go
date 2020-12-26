@@ -414,8 +414,8 @@ func main() {
 					}
 					return nil
 				},
-				Usage:       "get signal parameters",
-				ArgsUsage:   "<ifname>",
+				Usage:     "get signal parameters",
+				ArgsUsage: "<ifname>",
 			},
 			{
 				Name: "networks",
@@ -570,36 +570,52 @@ func main() {
 							}
 							psk := c.String("psk")
 							if len(psk) > 0 {
-								add_args["psk"] = c.String("psk")
+								add_args["psk"] = psk
 							}
 							if c.Bool("disabled") {
 								add_args["disabled"] = 1
 							} else {
 								add_args["disabled"] = 0
 							}
+							proto := c.String("proto")
+							if len(proto) > 0 {
+								add_args["proto"] = proto
+							}
+							km := c.String("key_mgmt")
+							if len(km) > 0 {
+								add_args["key_mgmt"] = km
+							}
 							var result string
 							if err := bo.Call(DbusIface+".Interface.AddNetwork", 0, add_args).Store(&result); err != nil {
 								log.Fatal(err)
 							}
-							log.Print(result)
+							if c.Bool("results") {
+								network_show_list(c, conn, obj)
+							}
 							return nil
 						},
 						Usage:     "add a network entry",
 						ArgsUsage: "<ifname>",
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:    "ssid",
-								Aliases: []string{"s"},
-								Usage:   "SSID of the entry",
+								Name:  "ssid",
+								Usage: "SSID of the entry",
 							},
 							&cli.StringFlag{
-								Name:    "psk",
-								Aliases: []string{"password", "pw", "p"},
-								Usage:   "Preshared key (aka. password)",
+								Name:  "psk",
+								Usage: "Preshared key (aka. password)",
+							},
+							&cli.StringFlag{
+								Name:  "proto",
+								Usage: "list of accepted protocols",
 							},
 							&cli.StringFlag{
 								Name:  "key_mgmt",
 								Usage: "Key management method",
+							},
+							&cli.UintFlag{
+								Name:  "ieee80211w",
+								Usage: "management frame protection mode (0: disabled, 1: optional, 2: required)",
 							},
 							&cli.BoolFlag{
 								Name:  "disabled",
@@ -607,9 +623,8 @@ func main() {
 								Usage: "Initial state of the entry",
 							},
 							&cli.BoolFlag{
-								Name:    "results",
-								Aliases: []string{"r"},
-								Usage:   "Show resulting network list",
+								Name:  "results",
+								Usage: "Show resulting network list",
 							},
 						},
 					},
