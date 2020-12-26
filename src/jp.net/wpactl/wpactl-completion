@@ -1,14 +1,17 @@
 #! /bin/bash
 
-PROG=wpactl
-
-_cli_bash_autocomplete() {
-  if [[ "${COMP_WORDS[0]}" != "source" ]]; then
+_wpactl_bash_autocomplete() {
+  local CMDS_REQUIRE_IFACE='status st up down dn scan sc scan-results sr scr reconnect rc disconnect dc reassociate ra reattach rat signal_poll'
+  if [[ "${COMP_WORDS[0]}" != source ]]; then
     local cur opts base
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     if [[ "$cur" == "-"* ]]; then
       opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} ${cur} --generate-bash-completion )
+    elif __contains_word "${COMP_WORDS[1]}" $CMDS_REQUIRE_IFACE ; then
+	    opts=$( __get_links )
+    elif test "${COMP_WORDS[1]}" = networks && __contains_word "${COMP_WORDS[2]}" list ls disable enable remove select add ; then
+	    opts=$( __get_links )
     else
       opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} --generate-bash-completion )
     fi
@@ -17,5 +20,5 @@ _cli_bash_autocomplete() {
   fi
 }
 
-complete -o bashdefault -o default -o nospace -F _cli_bash_autocomplete $PROG
-unset PROG
+type __get_links >& /dev/null || source /usr/share/bash-completion/completions/networkctl
+complete -o bashdefault -o default -o nospace -F _wpactl_bash_autocomplete wpactl
