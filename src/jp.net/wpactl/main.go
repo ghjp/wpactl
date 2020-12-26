@@ -483,12 +483,18 @@ func main() {
 							_, oip := get_obj_iface_path_of_iface(c, obj)
 							bo := conn.Object(DbusService, oip)
 							to_remove_id := c.Int("id")
-							for idx, netobj := range network_get_obj_list(c, conn, obj) {
-								if idx == to_remove_id {
-									if err := bo.Call(DbusIface+".Interface.RemoveNetwork", 0, netobj).Err; err != nil {
-										log.Fatal(err)
+							if c.Bool("all") {
+								if err := bo.Call(DbusIface+".Interface.RemoveAllNetworks", 0).Err; err != nil {
+									log.Fatal(err)
+								}
+							} else {
+								for idx, netobj := range network_get_obj_list(c, conn, obj) {
+									if idx == to_remove_id {
+										if err := bo.Call(DbusIface+".Interface.RemoveNetwork", 0, netobj).Err; err != nil {
+											log.Fatal(err)
+										}
+										break
 									}
-									break
 								}
 							}
 							if c.Bool("results") {
@@ -501,10 +507,14 @@ func main() {
 						Description: "Remove the network by given index",
 						Flags: []cli.Flag{
 							&cli.IntFlag{
-								Name:     "id",
-								Aliases:  []string{"i"},
-								Required: true,
-								Usage:    "Id number of the network to remove",
+								Name:    "id",
+								Aliases: []string{"i"},
+								Value:   -1,
+								Usage:   "Id number of the network to remove",
+							},
+							&cli.BoolFlag{
+								Name:  "all",
+								Usage: "Remove all configured networks from the interface",
 							},
 							&cli.BoolFlag{
 								Name:    "results",
