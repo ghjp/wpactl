@@ -18,11 +18,11 @@ const (
 type cliExtended struct {
 	// This is a derived object
 	*cli.Context
-	dconn *dbus.Conn
+	*dbus.Conn
 }
 
 func (ce *cliExtended) get_iface_path(ifname string) (obj_iface_path dbus.ObjectPath) {
-	bo := ce.dconn.Object(DbusService, DbusPath)
+	bo := ce.Object(DbusService, DbusPath)
 	if err := bo.Call(DbusIface+".GetInterface", 0, ifname).Store(&obj_iface_path); err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func (ce *cliExtended) get_iface_path(ifname string) (obj_iface_path dbus.Object
 }
 
 func (ce *cliExtended) get_bss_property(bss dbus.ObjectPath, prop string) interface{} {
-	bss_obj := ce.dconn.Object(DbusService, bss)
+	bss_obj := ce.Object(DbusService, bss)
 	propval, err := bss_obj.GetProperty(DbusIface + ".BSS." + prop)
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +53,7 @@ func (ce *cliExtended) get_obj_iface_path_of_iface() (string, dbus.ObjectPath) {
 
 func (ce *cliExtended) perform_netop() {
 	ifn, oip := ce.get_obj_iface_path_of_iface()
-	bo := ce.dconn.Object(DbusService, oip)
+	bo := ce.Object(DbusService, oip)
 	cmd := strings.Title(ce.Command.Name)
 	if err := bo.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
 		log.Fatal(err)
@@ -64,9 +64,9 @@ func (ce *cliExtended) perform_netop() {
 func (ce *cliExtended) get_managed_ifaces() []string {
 	var result []string
 	log.Println("====== Managed interfaces ======")
-	if managed_ifaces, err := ce.dconn.Object(DbusService, DbusPath).GetProperty(DbusIface + ".Interfaces"); err == nil {
+	if managed_ifaces, err := ce.Object(DbusService, DbusPath).GetProperty(DbusIface + ".Interfaces"); err == nil {
 		for _, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
-			bo := ce.dconn.Object(DbusService, iface_opath)
+			bo := ce.Object(DbusService, iface_opath)
 			if ifname, err := bo.GetProperty(DbusIface + ".Interface.Ifname"); err == nil {
 				if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
 					line := fmt.Sprintf("%-20v %v", ifname.Value(), state.Value())
@@ -93,7 +93,7 @@ func list_ifaces(ifnames []string) {
 
 func (ce *cliExtended) show_scan_results() {
 	_, oip := ce.get_obj_iface_path_of_iface()
-	bo := ce.dconn.Object(DbusService, oip)
+	bo := ce.Object(DbusService, oip)
 	for {
 		if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
 			if scan_is_ongoing.Value().(bool) {
@@ -123,7 +123,7 @@ func (ce *cliExtended) show_scan_results() {
 }
 
 func (ce *cliExtended) get_network_properties(netobj dbus.ObjectPath) (retval map[string]dbus.Variant) {
-	bo := ce.dconn.Object(DbusService, netobj)
+	bo := ce.Object(DbusService, netobj)
 	if nwprops, err := bo.GetProperty(DbusIface + ".Network.Properties"); err == nil {
 		retval = nwprops.Value().(map[string]dbus.Variant)
 	} else {
@@ -134,7 +134,7 @@ func (ce *cliExtended) get_network_properties(netobj dbus.ObjectPath) (retval ma
 
 func (ce *cliExtended) network_get_obj_list() []dbus.ObjectPath {
 	_, oip := ce.get_obj_iface_path_of_iface()
-	bo := ce.dconn.Object(DbusService, oip)
+	bo := ce.Object(DbusService, oip)
 	if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
 		return nwlist.Value().([]dbus.ObjectPath)
 	} else {
@@ -154,12 +154,12 @@ func (ce *cliExtended) network_show_list() {
 
 func (ce *cliExtended) network_set_state(state bool) {
 	_, oip := ce.get_obj_iface_path_of_iface()
-	bo := ce.dconn.Object(DbusService, oip)
+	bo := ce.Object(DbusService, oip)
 	if nwlist, err := bo.GetProperty(DbusIface + ".Interface.Networks"); err == nil {
 		to_change_id := ce.Int("id")
 		for i, nwobj := range nwlist.Value().([]dbus.ObjectPath) {
 			if i == to_change_id {
-				bo = ce.dconn.Object(DbusService, nwobj)
+				bo = ce.Object(DbusService, nwobj)
 				if err = bo.SetProperty(DbusService+".Network.Enabled", dbus.MakeVariant(state)); err != nil {
 					log.Fatal(err)
 				}
@@ -176,7 +176,7 @@ func (ce *cliExtended) network_set_state(state bool) {
 
 func (ce *cliExtended) show_status() {
 	ifn, oip := ce.get_obj_iface_path_of_iface()
-	bo := ce.dconn.Object(DbusService, oip)
+	bo := ce.Object(DbusService, oip)
 	log.Print("Interface status")
 	log.Print("================")
 	if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
@@ -218,7 +218,8 @@ func main() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	ce := cliExtended{dconn: conn}
+	ce := cliExtended{}
+	ce.Conn = conn
 
 	app := &cli.App{
 		Version:              "0.0.1",
@@ -270,7 +271,7 @@ func main() {
 						ci_args["BridgeIfname"] = brif
 					}
 
-					if err = ce.dconn.Object(DbusService, DbusPath).Call(DbusIface+".CreateInterface", 0, ci_args).Err; err != nil {
+					if err = ce.Object(DbusService, DbusPath).Call(DbusIface+".CreateInterface", 0, ci_args).Err; err != nil {
 						log.Fatal(err)
 					}
 					log.Println("Interface", ci_args["Ifname"], "now managed")
@@ -305,7 +306,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					ce.Context = c
 					ifname, oip := ce.get_obj_iface_path_of_iface()
-					if err = ce.dconn.Object(DbusService, DbusPath).Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
+					if err = ce.Object(DbusService, DbusPath).Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
 						log.Fatal(err)
 					}
 					log.Println("Interface", ifname, "no longer managed")
@@ -321,7 +322,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					ce.Context = c
 					ifn, oip := ce.get_obj_iface_path_of_iface()
-					iface_obj := ce.dconn.Object(DbusService, oip)
+					iface_obj := ce.Object(DbusService, oip)
 					scan_args := make(map[string]interface{})
 					scan_args["Type"] = ce.String("type")
 					scan_args["AllowRoam"] = ce.Bool("allow-roam")
@@ -423,7 +424,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					ce.Context = c
 					_, oip := ce.get_obj_iface_path_of_iface()
-					bo := ce.dconn.Object(DbusService, oip)
+					bo := ce.Object(DbusService, oip)
 					var siginfo map[string]dbus.Variant
 					if err := bo.Call(DbusIface+".Interface.SignalPoll", 0).Store(&siginfo); err != nil {
 						log.Fatal(err)
@@ -504,7 +505,7 @@ func main() {
 						Action: func(c *cli.Context) error {
 							ce.Context = c
 							_, oip := ce.get_obj_iface_path_of_iface()
-							bo := ce.dconn.Object(DbusService, oip)
+							bo := ce.Object(DbusService, oip)
 							to_remove_id := ce.Int("id")
 							if ce.Bool("all") {
 								if err := bo.Call(DbusIface+".Interface.RemoveAllNetworks", 0).Err; err != nil {
@@ -551,7 +552,7 @@ func main() {
 						Action: func(c *cli.Context) error {
 							ce.Context = c
 							_, oip := ce.get_obj_iface_path_of_iface()
-							bo := ce.dconn.Object(DbusService, oip)
+							bo := ce.Object(DbusService, oip)
 							to_select_id := ce.Int("id")
 							for idx, netobj := range ce.network_get_obj_list() {
 								if idx == to_select_id {
@@ -597,7 +598,7 @@ func main() {
 						Action: func(c *cli.Context) error {
 							ce.Context = c
 							_, oip := ce.get_obj_iface_path_of_iface()
-							bo := ce.dconn.Object(DbusService, oip)
+							bo := ce.Object(DbusService, oip)
 							add_args := make(map[string]interface{})
 							s := ce.String("ssid")
 							if len(s) > 0 {
