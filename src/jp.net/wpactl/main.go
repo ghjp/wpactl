@@ -63,7 +63,6 @@ func (ce *cliExtended) perform_netop() {
 
 func (ce *cliExtended) get_managed_ifaces() []string {
 	var result []string
-	log.Println("====== Managed interfaces ======")
 	if managed_ifaces, err := ce.Object(DbusService, DbusPath).GetProperty(DbusIface + ".Interfaces"); err == nil {
 		for _, iface_opath := range managed_ifaces.Value().([]dbus.ObjectPath) {
 			bo := ce.Object(DbusService, iface_opath)
@@ -85,6 +84,7 @@ func (ce *cliExtended) get_managed_ifaces() []string {
 }
 
 func list_ifaces(ifnames []string) {
+	log.Println("====== Managed interfaces ======")
 	for i, iname := range ifnames {
 		log.Println(i, iname)
 	}
