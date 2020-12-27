@@ -25,7 +25,7 @@ all:
 	$(GO_CALL) build
 	install -D --strip --strip-program=$(CROSS_COMPILE)strip --mode=755 --target-directory=$(DEB_USR_BIN_DIR) $(PN)
 	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/usr/share/doc/$(PN) $(GO_PATH)/README.md $(GO_PATH)/LICENSE
-	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/usr/share/bash-completion/completions wpactl-completion
+	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/etc/bash_completion.d wpactl-completion
 	mkdir $(DEBIAN_DESTDIR)/DEBIAN
 	{ \
 		echo Package: $(PN); \
@@ -38,7 +38,7 @@ all:
 		echo Description: $(DESCRIPTION); \
 	} > $(DEBIAN_DESTDIR)/DEBIAN/control
 	install --directory $(PKG_DIR)
-	dpkg-deb --deb-format=2.0 --build $(DEBIAN_DESTDIR) $(PKG_DIR)
+	dpkg-deb --deb-format=2.0 --root-owner-group --build $(DEBIAN_DESTDIR) $(PKG_DIR)
 	@echo Package is in directory $(PKG_DIR)
 
 clean:
