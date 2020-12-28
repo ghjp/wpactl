@@ -5,6 +5,8 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/urfave/cli/v2"
 	"log"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -208,6 +210,17 @@ func (ce *cliExtended) show_status() {
 			log.Printf("%-24s %v", "signal", signal)
 			log.Printf("%-24s %v", "privacy", privacy)
 			log.Printf("%-24s %vs", "age", age)
+			if iface, err := net.InterfaceByName(ifn); err == nil {
+				if addrlist, err := iface.Addrs(); err == nil {
+					for idx, name := range addrlist {
+						log.Printf("%-24s %s", "ipaddr"+strconv.Itoa(idx), name)
+					}
+				} else {
+					log.Fatal(err)
+				}
+			} else {
+				log.Fatal(err)
+			}
 		}
 	}
 }
