@@ -182,9 +182,9 @@ func (ce *cliExtended) show_status() {
 	log.Print("Interface status")
 	log.Print("================")
 	if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
-		log.Printf("%-24s %s", "interface", ifn)
-		log.Printf("%-24s %v", "dbus interface", oip)
-		log.Printf("%-24s %v", "state", state)
+		log.Printf("%-16s %s", "interface", ifn)
+		log.Printf("%-16s %v", "dbus interface", oip)
+		log.Printf("%-16s %v", "state", state)
 	} else {
 		log.Fatal(err)
 	}
@@ -200,20 +200,20 @@ func (ce *cliExtended) show_status() {
 			privacy := ce.get_bss_property(cbss_opath, "Privacy")
 			age := ce.get_bss_property(cbss_opath, "Age")
 			rsn := ce.get_bss_property(cbss_opath, "RSN").(map[string]dbus.Variant)
-			log.Printf("%-24s %02x", "bssid", bssid)
-			log.Printf("%-24s %v", "freq", frequency)
-			log.Printf("%-24s %v", "ssid", ssid)
-			log.Printf("%-24s %v", "mode", mode)
-			log.Printf("%-24s %v", "pairwise_cipher", rsn["Pairwise"])
-			log.Printf("%-24s %v", "group_cipher", rsn["Group"])
-			log.Printf("%-24s %v", "key_mgmt", rsn["KeyMgmt"])
-			log.Printf("%-24s %v", "signal", signal)
-			log.Printf("%-24s %v", "privacy", privacy)
-			log.Printf("%-24s %vs", "age", age)
+			log.Printf("%-16s %02x", "bssid", bssid)
+			log.Printf("%-16s %v", "freq", frequency)
+			log.Printf("%-16s %v", "ssid", ssid)
+			log.Printf("%-16s %v", "mode", mode)
+			log.Printf("%-16s %v", "pairwise cipher", rsn["Pairwise"])
+			log.Printf("%-16s %v", "group cipher", rsn["Group"])
+			log.Printf("%-16s %v", "key mgmt", rsn["KeyMgmt"])
+			log.Printf("%-16s %v", "signal", signal)
+			log.Printf("%-16s %v", "privacy", privacy)
+			log.Printf("%-16s %vs", "age", age)
 			if iface, err := net.InterfaceByName(ifn); err == nil {
 				if addrlist, err := iface.Addrs(); err == nil {
 					for idx, name := range addrlist {
-						log.Printf("%-24s %s", "ipaddr"+strconv.Itoa(idx), name)
+						log.Printf("%-16s %s", "ipaddr"+strconv.Itoa(idx), name)
 					}
 				} else {
 					log.Fatal(err)
