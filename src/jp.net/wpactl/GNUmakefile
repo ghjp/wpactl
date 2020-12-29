@@ -10,7 +10,7 @@ else
 	GOARCH=$(ARCH)
 	CROSS_COMPILE=x86_64-linux-gnu-
 endif
-PV = 0.0.1
+PV = 0.0.2
 PN = wpactl
 DESCRIPTION = Control WPA supplicant through d-bus interface
 GO_PATH = $(CURDIR)/../../..

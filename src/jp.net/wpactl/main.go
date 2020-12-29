@@ -235,7 +235,7 @@ func main() {
 	ce.Conn = conn
 
 	app := &cli.App{
-		Version:              "0.0.1",
+		Version:              "0.0.2",
 		EnableBashCompletion: true,
 		Authors: []*cli.Author{
 			{Name: "Dr. Johann Pfefferl", Email: "pfefferl@gmx.net"},
