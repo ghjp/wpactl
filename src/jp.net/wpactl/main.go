@@ -60,7 +60,7 @@ func (ce *cliExtended) perform_netop() {
 	if err := bo.Call(DbusIface+".Interface."+cmd, 0).Err; err != nil {
 		log.Fatal(err)
 	}
-	log.Println(cmd, "interface", ifn)
+	fmt.Println(cmd, "interface", ifn)
 }
 
 func (ce *cliExtended) get_managed_ifaces() []string {
@@ -86,11 +86,11 @@ func (ce *cliExtended) get_managed_ifaces() []string {
 }
 
 func list_ifaces(ifnames []string) {
-	log.Println("====== Managed interfaces ======")
+	fmt.Println("====== Managed interfaces ======")
 	for i, iname := range ifnames {
-		log.Println(i, iname)
+		fmt.Println(i, iname)
 	}
-	log.Print("\tHint: use command ´up´ or ´down´ to integrate or disintegrate an interface")
+	fmt.Println("\tHint: use command ´up´ or ´down´ to integrate or disintegrate a link")
 }
 
 func (ce *cliExtended) show_scan_results() {
@@ -99,7 +99,7 @@ func (ce *cliExtended) show_scan_results() {
 	for {
 		if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
 			if scan_is_ongoing.Value().(bool) {
-				log.Print("Interface is still scanning. Waiting ...")
+				fmt.Println("Interface is still scanning. Waiting ...")
 				time.Sleep(2 * time.Second)
 			} else {
 				break
@@ -109,15 +109,15 @@ func (ce *cliExtended) show_scan_results() {
 		}
 	}
 	if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
-		log.Print("SSID                             BSSID        Freq Sig")
-		log.Print("======================================================")
+		fmt.Println("SSID                             BSSID        Freq Sig")
+		fmt.Println("======================================================")
 		bss_list := v.Value().([]dbus.ObjectPath)
 		for _, bss := range bss_list {
 			ssid := string(ce.get_bss_property(bss, "SSID").([]byte))
 			bssid := ce.get_bss_property(bss, "BSSID").([]byte)
 			freq := ce.get_bss_property(bss, "Frequency").(uint16)
 			signal := ce.get_bss_property(bss, "Signal").(int16)
-			log.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
+			fmt.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
 		}
 	} else {
 		log.Fatal(err)
@@ -146,11 +146,11 @@ func (ce *cliExtended) network_get_obj_list() []dbus.ObjectPath {
 }
 
 func (ce *cliExtended) network_show_list() {
-	log.Printf("Id SSID                             Dis")
-	log.Printf("=======================================")
+	fmt.Println("Id SSID                             Dis")
+	fmt.Println("=======================================")
 	for i, nwobj := range ce.network_get_obj_list() {
 		nprops := ce.get_network_properties(nwobj)
-		log.Printf("% 2d %-32v %-3v", i, nprops["ssid"].Value(), nprops["disabled"])
+		fmt.Printf("% 2d %-32v %-3v\n", i, nprops["ssid"].Value(), nprops["disabled"])
 	}
 }
 
@@ -179,12 +179,12 @@ func (ce *cliExtended) network_set_state(state bool) {
 func (ce *cliExtended) show_status() {
 	ifn, oip := ce.get_obj_iface_path_of_iface()
 	bo := ce.Object(DbusService, oip)
-	log.Print("Interface status")
-	log.Print("================")
+	fmt.Println("Interface status")
+	fmt.Println("================")
 	if state, err := bo.GetProperty(DbusIface + ".Interface.State"); err == nil {
-		log.Printf("%-16s %s", "interface", ifn)
-		log.Printf("%-16s %v", "dbus interface", oip)
-		log.Printf("%-16s %v", "state", state)
+		fmt.Printf("%-16s %s\n", "interface", ifn)
+		fmt.Printf("%-16s %v\n", "dbus interface", oip)
+		fmt.Printf("%-16s %v\n", "state", state)
 	} else {
 		log.Fatal(err)
 	}
@@ -200,20 +200,20 @@ func (ce *cliExtended) show_status() {
 			privacy := ce.get_bss_property(cbss_opath, "Privacy")
 			age := ce.get_bss_property(cbss_opath, "Age")
 			rsn := ce.get_bss_property(cbss_opath, "RSN").(map[string]dbus.Variant)
-			log.Printf("%-16s %02x", "bssid", bssid)
-			log.Printf("%-16s %v", "freq", frequency)
-			log.Printf("%-16s %v", "ssid", ssid)
-			log.Printf("%-16s %v", "mode", mode)
-			log.Printf("%-16s %v", "pairwise cipher", rsn["Pairwise"])
-			log.Printf("%-16s %v", "group cipher", rsn["Group"])
-			log.Printf("%-16s %v", "key mgmt", rsn["KeyMgmt"])
-			log.Printf("%-16s %v", "signal", signal)
-			log.Printf("%-16s %v", "privacy", privacy)
-			log.Printf("%-16s %vs", "age", age)
+			fmt.Printf("%-16s %02x\n", "bssid", bssid)
+			fmt.Printf("%-16s %v\n", "freq", frequency)
+			fmt.Printf("%-16s %v\n", "ssid", ssid)
+			fmt.Printf("%-16s %v\n", "mode", mode)
+			fmt.Printf("%-16s %v\n", "pairwise cipher", rsn["Pairwise"])
+			fmt.Printf("%-16s %v\n", "group cipher", rsn["Group"])
+			fmt.Printf("%-16s %v\n", "key mgmt", rsn["KeyMgmt"])
+			fmt.Printf("%-16s %v\n", "signal", signal)
+			fmt.Printf("%-16s %v\n", "privacy", privacy)
+			fmt.Printf("%-16s %vs\n", "age", age)
 			if iface, err := net.InterfaceByName(ifn); err == nil {
 				if addrlist, err := iface.Addrs(); err == nil {
 					for idx, name := range addrlist {
-						log.Printf("%-16s %s", "ipaddr"+strconv.Itoa(idx), name)
+						fmt.Printf("%-16s %s\n", "ipaddr"+strconv.Itoa(idx), name)
 					}
 				} else {
 					log.Fatal(err)
@@ -287,7 +287,7 @@ func main() {
 					if err = ce.Object(DbusService, DbusPath).Call(DbusIface+".CreateInterface", 0, ci_args).Err; err != nil {
 						log.Fatal(err)
 					}
-					log.Println("Interface", ci_args["Ifname"], "now managed")
+					fmt.Println("Interface", ci_args["Ifname"], "now managed")
 					return nil
 				},
 				Flags: []cli.Flag{
@@ -322,7 +322,7 @@ func main() {
 					if err = ce.Object(DbusService, DbusPath).Call(DbusIface+".RemoveInterface", 0, oip).Err; err != nil {
 						log.Fatal(err)
 					}
-					log.Println("Interface", ifname, "no longer managed")
+					fmt.Println("Interface", ifname, "no longer managed")
 					return nil
 				},
 				Usage:       "bring down network interface",
@@ -340,7 +340,7 @@ func main() {
 					scan_args["Type"] = ce.String("type")
 					scan_args["AllowRoam"] = ce.Bool("allow-roam")
 
-					log.Println("Trigger scan on interface", ifn)
+					fmt.Println("Trigger scan on interface", ifn)
 					if err = iface_obj.Call(DbusIface+".Interface.Scan", 0, scan_args).Err; err != nil {
 						log.Fatal(err)
 					}
@@ -443,7 +443,7 @@ func main() {
 						log.Fatal(err)
 					}
 					for signame, sigval := range siginfo {
-						log.Printf("%-10s %v", signame, sigval)
+						fmt.Printf("%-10s %v\n", signame, sigval)
 					}
 					return nil
 				},
