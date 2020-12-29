@@ -33,7 +33,7 @@ all:
 		echo Section: net; \
 		echo Priority: optional; \
 		echo 'Maintainer: $(DEBFULLNAME) <$(DEBEMAIL)>'; \
-		echo Depends: libc6; \
+		echo Depends: libc6, wpasupplicant; \
 		echo Version: $(PV)+sloppy; \
 		echo Description: $(DESCRIPTION); \
 	} > $(DEBIAN_DESTDIR)/DEBIAN/control
