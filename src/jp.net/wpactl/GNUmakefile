@@ -26,6 +26,8 @@ all:
 	install -D --strip --strip-program=$(CROSS_COMPILE)strip --mode=755 --target-directory=$(DEB_USR_BIN_DIR) $(PN)
 	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/usr/share/doc/$(PN) $(GO_PATH)/README.md $(GO_PATH)/LICENSE
 	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/etc/bash_completion.d wpactl-completion
+	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/lib/udev/rules.d 94-wpactl.rules
+	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/lib/systemd/system wpactl@.service
 	mkdir $(DEBIAN_DESTDIR)/DEBIAN
 	{ \
 		echo Package: $(PN); \

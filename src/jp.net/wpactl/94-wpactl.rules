@@ -1,0 +1,1 @@
+SUBSYSTEM=="net", ACTION=="move", DRIVERS=="?*", KERNEL=="wl*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="wpactl@%k.service"

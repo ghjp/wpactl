@@ -1,0 +1,13 @@
+[Unit]
+Description=WPA control (interface-specific version for %i)
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/wpactl up %I
+ExecStop=/usr/bin/wpactl down %I
+
+[Install]
+WantedBy=multi-user.target
