@@ -94,19 +94,34 @@ func list_ifaces(ifnames []string) {
 }
 
 func (ce *cliExtended) show_scan_results() {
+	sigch := make(chan *dbus.Signal, 16)
+	if err := ce.AddMatchSignal(dbus.WithMatchInterface(DbusService + ".Interface")); err != nil {
+		log.Fatal(err)
+	}
+	ce.Signal(sigch)
+	defer ce.RemoveSignal(sigch)
 	_, oip := ce.get_obj_iface_path_of_iface()
 	bo := ce.Object(DbusService, oip)
-	for {
-		if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
-			if scan_is_ongoing.Value().(bool) {
-				fmt.Println("Interface is still scanning. Waiting ...")
-				time.Sleep(2 * time.Second)
-			} else {
-				break
+	if scan_is_ongoing, err := bo.GetProperty(DbusIface + ".Interface.Scanning"); err == nil {
+		if scan_is_ongoing.Value().(bool) {
+			fmt.Print("Interface is still scanning. Waiting ")
+		ScanWaitLoop:
+			for {
+				select {
+				case sig := <-sigch:
+					if sig.Name == DbusService+".Interface.ScanDone" && sig.Body[0].(bool) {
+						fmt.Println(" done")
+						break ScanWaitLoop
+					} else {
+						fmt.Print("+")
+					}
+				case <-time.After(2 * time.Second):
+					fmt.Print("-")
+				}
 			}
-		} else {
-			log.Fatal(err)
 		}
+	} else {
+		log.Fatal(err)
 	}
 	if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
 		fmt.Println("SSID                             BSSID        Freq Sig")
