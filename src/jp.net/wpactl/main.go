@@ -124,8 +124,8 @@ func (ce *cliExtended) show_scan_results() {
 		log.Fatal(err)
 	}
 	if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
-		fmt.Println("SSID                             BSSID        Freq Sig Age")
-		fmt.Println("==========================================================")
+		fmt.Println("SSID                             BSSID        Freq Sig Age Flags")
+		fmt.Println("================================================================")
 		bss_list := v.Value().([]dbus.ObjectPath)
 		for _, bss := range bss_list {
 			ssid := string(ce.get_bss_property(bss, "SSID").([]byte))
@@ -133,7 +133,8 @@ func (ce *cliExtended) show_scan_results() {
 			freq := ce.get_bss_property(bss, "Frequency").(uint16)
 			signal := ce.get_bss_property(bss, "Signal").(int16)
 			age := ce.get_bss_property(bss, "Age").(uint32)
-			fmt.Printf("%-32s %02x %d %d %3v\n", ssid, bssid, freq, signal, age)
+			rsn := ce.get_bss_property(bss, "RSN").(map[string]dbus.Variant)
+			fmt.Printf("%-32s %02x %d %d %3v %v %v\n", ssid, bssid, freq, signal, age, rsn["KeyMgmt"].Value(), rsn["Pairwise"].Value())
 		}
 	} else {
 		log.Fatal(err)
