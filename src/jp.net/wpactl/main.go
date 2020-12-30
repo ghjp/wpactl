@@ -124,15 +124,16 @@ func (ce *cliExtended) show_scan_results() {
 		log.Fatal(err)
 	}
 	if v, err := bo.GetProperty(DbusIface + ".Interface.BSSs"); err == nil {
-		fmt.Println("SSID                             BSSID        Freq Sig")
-		fmt.Println("======================================================")
+		fmt.Println("SSID                             BSSID        Freq Sig Age")
+		fmt.Println("==========================================================")
 		bss_list := v.Value().([]dbus.ObjectPath)
 		for _, bss := range bss_list {
 			ssid := string(ce.get_bss_property(bss, "SSID").([]byte))
 			bssid := ce.get_bss_property(bss, "BSSID").([]byte)
 			freq := ce.get_bss_property(bss, "Frequency").(uint16)
 			signal := ce.get_bss_property(bss, "Signal").(int16)
-			fmt.Printf("%-32s %02x %d %d\n", ssid, bssid, freq, signal)
+			age := ce.get_bss_property(bss, "Age").(uint32)
+			fmt.Printf("%-32s %02x %d %d %3v\n", ssid, bssid, freq, signal, age)
 		}
 	} else {
 		log.Fatal(err)
@@ -464,6 +465,26 @@ func main() {
 				},
 				Usage:     "get signal parameters",
 				ArgsUsage: "<ifname>",
+			},
+			{
+				Name: "flush_bss",
+				Action: func(c *cli.Context) error {
+					ce.Context = c
+					_, oip := ce.get_obj_iface_path_of_iface()
+					bo := ce.Object(DbusService, oip)
+					if err := bo.Call(DbusIface+".Interface.FlushBSS", 0, c.Uint("age")).Err; err != nil {
+						log.Fatal(err)
+					}
+					return nil
+				},
+				Usage:     "Flush BSS entries from the cache",
+				ArgsUsage: "<ifname>",
+				Flags: []cli.Flag{
+					&cli.UintFlag{
+						Name:  "age",
+						Usage: "Maximum age in seconds for BSS entries to keep in cache (0 = remove all entries)",
+					},
+				},
 			},
 			{
 				Name: "networks",
