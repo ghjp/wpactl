@@ -311,19 +311,16 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.PathFlag{
 						Name:      "config",
-						Aliases:   []string{"ce"},
 						TakesFile: true,
 						Value:     "/etc/wpa_supplicant/wpa_supplicant.conf",
 						Usage:     "Configuration file path",
 					},
 					&cli.StringFlag{
 						Name:    "driver",
-						Aliases: []string{"D"},
 						Usage:   "Driver name which the interface uses, e.g., nl80211",
 					},
 					&cli.StringFlag{
 						Name:    "bridge",
-						Aliases: []string{"b"},
 						Usage:   "Name of the bridge interface to control, e.g., br0",
 					},
 				},
@@ -493,7 +490,6 @@ func main() {
 				Subcommands: []*cli.Command{
 					{
 						Name:    "list",
-						Aliases: []string{"ls"},
 						Action: func(c *cli.Context) error {
 							ce.Context = c
 							ce.network_show_list()
