@@ -12,6 +12,8 @@ _wpactl_bash_autocomplete() {
 	    opts=$( __get_links )
     elif test "${COMP_WORDS[1]}" = networks && __contains_word "${COMP_WORDS[2]}" list ls disable enable remove select add ; then
 	    opts=$( __get_links )
+    elif test "${COMP_WORDS[1]}" = blob && __contains_word "${COMP_WORDS[2]}" list remove add get ; then
+	    opts=$( __get_links )
     else
       opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} --generate-bash-completion )
     fi

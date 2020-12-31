@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/godbus/dbus/v5"
 	"github.com/urfave/cli/v2"
+	"io/ioutil"
 	"log"
 	"net"
 	"strconv"
@@ -729,6 +730,128 @@ func main() {
 				},
 				Usage:     "operation on configured networks",
 				ArgsUsage: "<ifname>",
+			},
+			{
+				Name:      "blob",
+				Usage:     "manage blobs",
+				ArgsUsage: "<ifname>",
+				Subcommands: []*cli.Command{
+					{
+						Name: "list",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							_, oip := ce.get_obj_iface_path_of_iface()
+							bo := ce.Object(DbusService, oip)
+							if bloblist, err := bo.GetProperty(DbusIface + ".Interface.Blobs"); err == nil {
+								blobmap := bloblist.Value().(map[string][]uint8)
+								if ce.Bool("no-legend") {
+									for bname, _ := range blobmap {
+										fmt.Println(bname)
+									}
+								} else {
+									fmt.Println("Name                             Length\n========================================")
+									for bname, bdata := range blobmap {
+										fmt.Printf("%-32s %d\n", bname, len(bdata))
+									}
+								}
+							} else {
+								log.Fatal(err)
+							}
+							return nil
+						},
+						Usage:     "show list of added blobs",
+						ArgsUsage: "<ifname>",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "no-legend",
+								Usage: "Do not show the headers and footers",
+							},
+						},
+					},
+					{
+						Name: "add",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							_, oip := ce.get_obj_iface_path_of_iface()
+							bo := ce.Object(DbusService, oip)
+							if content, err := ioutil.ReadFile(ce.Path("data")); err == nil {
+								if err := bo.Call(DbusIface+".Interface.AddBlob", 0, ce.String("name"), content).Err; err != nil {
+									log.Fatal(err)
+								}
+							} else {
+								log.Fatal(err)
+							}
+							return nil
+						},
+						Usage:     "adds a blob to the interface.",
+						ArgsUsage: "<ifname>",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Required: true,
+								Usage:    "identifier of the blob",
+							},
+							&cli.PathFlag{
+								Name:      "data",
+								TakesFile: true,
+								Required:  true,
+								Usage:     "file name containing the data",
+							},
+						},
+					},
+					{
+						Name: "remove",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							_, oip := ce.get_obj_iface_path_of_iface()
+							bo := ce.Object(DbusService, oip)
+							if err := bo.Call(DbusIface+".Interface.RemoveBlob", 0, ce.String("name")).Err; err != nil {
+								log.Fatal(err)
+							}
+							return nil
+						},
+						Usage:     "remove a blob from the interface.",
+						ArgsUsage: "<ifname>",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Required: true,
+								Usage:    "identifier of the blob",
+							},
+						},
+					},
+					{
+						Name: "get",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							_, oip := ce.get_obj_iface_path_of_iface()
+							bo := ce.Object(DbusService, oip)
+							var blobdata []byte
+							if err = bo.Call(DbusIface+".Interface.GetBlob", 0, ce.String("name")).Store(&blobdata); err != nil {
+								log.Fatal(err)
+							}
+							if err = ioutil.WriteFile(ce.Path("output"), blobdata, 0664); err != nil {
+								log.Fatal(err)
+							}
+							return nil
+						},
+						Usage:     "get the data from a previously added blob",
+						ArgsUsage: "<ifname>",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Required: true,
+								Usage:    "identifier of the blob",
+							},
+							&cli.PathFlag{
+								Name:      "output",
+								TakesFile: true,
+								Required:  true,
+								Usage:     "output file name",
+							},
+						},
+					},
+				},
 			},
 		},
 	}
