@@ -650,27 +650,18 @@ func main() {
 							_, oip := ce.get_obj_iface_path_of_iface()
 							bo := ce.Object(DbusService, oip)
 							add_args := make(map[string]interface{})
-							s := ce.String("ssid")
-							if len(s) > 0 {
-								add_args["ssid"] = s
+							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "eap", "identity", "client_cert", "private_key"} {
+								v := ce.String(s)
+								if len(v) > 0 {
+									add_args[s] = v
+								}
 							}
-							psk := ce.String("psk")
-							if len(psk) > 0 {
-								add_args["psk"] = psk
-							}
-							if ce.Bool("disabled") {
+							add_args["disabled"] = 0
+							if c.Bool("disabled") {
 								add_args["disabled"] = 1
-							} else {
-								add_args["disabled"] = 0
 							}
-							proto := ce.String("proto")
-							if len(proto) > 0 {
-								add_args["proto"] = proto
-							}
-							km := ce.String("key_mgmt")
-							if len(km) > 0 {
-								add_args["key_mgmt"] = km
-							}
+							add_args["ieee80211w"] = c.Uint("ieee80211w")
+							add_args["priority"] = c.Uint("prio")
 							var result string
 							if err := bo.Call(DbusIface+".Interface.AddNetwork", 0, add_args).Store(&result); err != nil {
 								log.Fatal(err)
@@ -701,6 +692,7 @@ func main() {
 							},
 							&cli.UintFlag{
 								Name:  "ieee80211w",
+								Value: 3, /* MGMT_FRAME_PROTECTION_DEFAULT */
 								Usage: "management frame protection mode (0: disabled, 1: optional, 2: required)",
 							},
 							&cli.BoolFlag{
@@ -711,6 +703,26 @@ func main() {
 							&cli.BoolFlag{
 								Name:  "results",
 								Usage: "Show resulting network list",
+							},
+							&cli.StringFlag{
+								Name:  "eap",
+								Usage: "space-separated list of accepted EAP methods",
+							},
+							&cli.StringFlag{
+								Name:  "identity",
+								Usage: "identity string for EAP",
+							},
+							&cli.StringFlag{
+								Name:  "client_cert",
+								Usage: "file path to client certificate file (PEM/DER)",
+							},
+							&cli.StringFlag{
+								Name:  "private_key",
+								Usage: "file path to client private key file (PEM/DER/PFX)",
+							},
+							&cli.UintFlag{
+								Name:  "prio",
+								Usage: "priority group",
 							},
 						},
 					},
