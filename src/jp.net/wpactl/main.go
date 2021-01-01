@@ -316,12 +316,12 @@ func main() {
 						Usage:     "Configuration file path",
 					},
 					&cli.StringFlag{
-						Name:    "driver",
-						Usage:   "Driver name which the interface uses, e.g., nl80211",
+						Name:  "driver",
+						Usage: "Driver name which the interface uses, e.g., nl80211",
 					},
 					&cli.StringFlag{
-						Name:    "bridge",
-						Usage:   "Name of the bridge interface to control, e.g., br0",
+						Name:  "bridge",
+						Usage: "Name of the bridge interface to control, e.g., br0",
 					},
 				},
 				Usage:       "bring up network interface",
@@ -489,7 +489,7 @@ func main() {
 				Name: "networks",
 				Subcommands: []*cli.Command{
 					{
-						Name:    "list",
+						Name: "list",
 						Action: func(c *cli.Context) error {
 							ce.Context = c
 							ce.network_show_list()
@@ -647,7 +647,7 @@ func main() {
 							_, oip := ce.get_obj_iface_path_of_iface()
 							bo := ce.Object(DbusService, oip)
 							add_args := make(map[string]interface{})
-							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "eap", "identity", "client_cert", "private_key"} {
+							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "eap", "identity", "client_cert", "private_key", "private_key_passwd"} {
 								v := ce.String(s)
 								if len(v) > 0 {
 									add_args[s] = v
@@ -716,6 +716,10 @@ func main() {
 							&cli.StringFlag{
 								Name:  "private_key",
 								Usage: "file path to client private key file (PEM/DER/PFX)",
+							},
+							&cli.StringFlag{
+								Name:  "private_key_passwd",
+								Usage: "password for private key file",
 							},
 							&cli.UintFlag{
 								Name:  "prio",
