@@ -1,7 +1,7 @@
 #! /bin/bash
 
 _wpactl_bash_autocomplete() {
-  local CMDS_REQUIRE_IFACE='status st up down dn scan sc scan-results sr scr reconnect rc disconnect dc reassociate ra reattach rat signal_poll flush_bss'
+  local CMDS_REQUIRE_IFACE='status st up down dn scan sc scan-results sr scr reconnect rc disconnect dc reassociate ra reattach rat signal_poll flush_bss monitor'
   if [[ "${COMP_WORDS[0]}" != source ]]; then
     local cur opts base
     COMPREPLY=()

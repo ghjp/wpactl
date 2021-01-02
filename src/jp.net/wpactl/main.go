@@ -870,6 +870,25 @@ func main() {
 					},
 				},
 			},
+			{
+				Name: "monitor",
+				Action: func(c *cli.Context) error {
+					ce.Context = c
+					sigch := make(chan *dbus.Signal, 4)
+					if err := ce.AddMatchSignal(dbus.WithMatchInterface(DbusService + ".Interface")); err != nil {
+						log.Fatal(err)
+					}
+					ce.Signal(sigch)
+					defer ce.RemoveSignal(sigch)
+					for sig := range sigch {
+						log.Println(sig)
+					}
+					return nil
+				},
+				Usage:       "show dbus signals",
+				ArgsUsage:   "<ifname>",
+				Description: "this is a raw dump of the signals sent by wpa_supplicant",
+			},
 		},
 	}
 
