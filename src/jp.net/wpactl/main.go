@@ -647,7 +647,7 @@ func main() {
 							_, oip := ce.get_obj_iface_path_of_iface()
 							bo := ce.Object(DbusService, oip)
 							add_args := make(map[string]interface{})
-							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "eap", "identity", "client_cert", "private_key", "private_key_passwd"} {
+							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "pairwise", "eap", "identity", "client_cert", "private_key", "private_key_passwd"} {
 								v := ce.String(s)
 								if len(v) > 0 {
 									add_args[s] = v
@@ -659,6 +659,11 @@ func main() {
 							}
 							add_args["ieee80211w"] = c.Uint("ieee80211w")
 							add_args["priority"] = c.Uint("prio")
+							add_args["mode"] = c.Uint("mode")
+							freq := c.Uint("frequency")
+							if freq > 0 {
+								add_args["frequency"] = freq
+							}
 							var result string
 							if err := bo.Call(DbusIface+".Interface.AddNetwork", 0, add_args).Store(&result); err != nil {
 								log.Fatal(err)
@@ -686,6 +691,18 @@ func main() {
 							&cli.StringFlag{
 								Name:  "key_mgmt",
 								Usage: "Key management method",
+							},
+							&cli.StringFlag{
+								Name:  "pairwise",
+								Usage: "list of accepted pairwise (unicast) ciphers for WPA",
+							},
+							&cli.UintFlag{
+								Name:  "frequency",
+								Usage: "channel frequency in megahertz",
+							},
+							&cli.UintFlag{
+								Name:  "mode",
+								Usage: "IEEE 802.11 operation mode: 0=infrastructure, 1=IBSS, 2=AP",
 							},
 							&cli.UintFlag{
 								Name:  "ieee80211w",
