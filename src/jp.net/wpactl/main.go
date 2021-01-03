@@ -897,8 +897,7 @@ func main() {
 					}
 					return nil
 				},
-				Usage:       "show dbus signals",
-				ArgsUsage:   "<ifname>",
+				Usage:       "show dbus signals for all managed interfaces",
 				Description: "this is a raw dump of the signals sent by wpa_supplicant",
 			},
 		},
