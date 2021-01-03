@@ -280,11 +280,23 @@ func main() {
 				Action: func(c *cli.Context) error {
 					ce.Context = c
 					ce.show_status()
+					for loop := c.Duration("loop"); loop > 0; {
+						hour, min, sec := time.Now().Clock()
+						fmt.Printf("clock            %02v:%02v:%02v\n", hour, min, sec)
+						time.Sleep(loop)
+						ce.show_status()
+					}
 					return nil
 				},
 				Usage:       "get current WPA/EAPOL/EAP status",
 				ArgsUsage:   "<ifname>",
 				Description: "Show actual state of the given interface",
+				Flags: []cli.Flag{
+					&cli.DurationFlag{
+						Name:  "loop",
+						Usage: "periodically print the status",
+					},
+				},
 			},
 			{
 				Name: "up",
