@@ -206,6 +206,11 @@ func (ce *cliExtended) show_status() {
 	} else {
 		log.Fatal(err)
 	}
+	if cam, err := bo.GetProperty(DbusIface + ".Interface.CurrentAuthMode"); err == nil {
+		fmt.Printf("%-16v %v\n", "auth mode", cam.Value())
+	} else {
+		log.Fatal(err)
+	}
 	if cbss, err := bo.GetProperty(DbusIface + ".Interface.CurrentBSS"); err == nil {
 		cbss_opath := cbss.Value().(dbus.ObjectPath)
 		/* Check if interface is really associated with a BSS */
