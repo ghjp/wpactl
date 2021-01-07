@@ -164,11 +164,21 @@ func (ce *cliExtended) network_get_obj_list() []dbus.ObjectPath {
 }
 
 func (ce *cliExtended) network_show_list() {
-	fmt.Println("Id SSID                             Dis")
-	fmt.Println("=======================================")
+	long_listing := ce.Bool("long")
+	var header string
+	if long_listing {
+		header = "Id SSID                             Dis dbus-obj-path\n====================================================="
+	} else {
+		header = "Id SSID                             Dis\n======================================="
+	}
+	fmt.Println(header)
 	for i, nwobj := range ce.network_get_obj_list() {
 		nprops := ce.get_network_properties(nwobj)
-		fmt.Printf("% 2d %-32v %-3v\n", i, nprops["ssid"].Value(), nprops["disabled"])
+		if long_listing {
+			fmt.Printf("% 2d %-32v %-3v %v\n", i, nprops["ssid"].Value(), nprops["disabled"], nwobj)
+		} else {
+			fmt.Printf("% 2d %-32v %-3v\n", i, nprops["ssid"].Value(), nprops["disabled"])
+		}
 	}
 }
 
@@ -515,6 +525,12 @@ func main() {
 						Usage:       "list configured networks",
 						ArgsUsage:   "<ifname>",
 						Description: "Report networks which are defined in the config files or added afterwards for the given interface",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "long",
+								Usage: "use a long listing format",
+							},
+						},
 					},
 					{
 						Name: "disable",
