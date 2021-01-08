@@ -587,6 +587,7 @@ func main() {
 							_, oip := ce.get_obj_iface_path_of_iface()
 							bo := ce.Object(DbusService, oip)
 							to_remove_id := ce.Int("id")
+							to_remove_ssid := `"` + ce.String("ssid") + `"`
 							if ce.Bool("all") {
 								if err := bo.Call(DbusIface+".Interface.RemoveAllNetworks", 0).Err; err != nil {
 									log.Fatal(err)
@@ -598,6 +599,13 @@ func main() {
 											log.Fatal(err)
 										}
 										break
+									} else if to_remove_ssid != `""` {
+										nprops := ce.get_network_properties(netobj)
+										if nprops["ssid"].Value() == to_remove_ssid {
+											if err := bo.Call(DbusIface+".Interface.RemoveNetwork", 0, netobj).Err; err != nil {
+												log.Fatal(err)
+											}
+										}
 									}
 								}
 							}
@@ -615,6 +623,10 @@ func main() {
 								Aliases: []string{"i"},
 								Value:   -1,
 								Usage:   "Id number of the network to remove",
+							},
+							&cli.StringFlag{
+								Name:  "ssid",
+								Usage: "SSID of the network to remove",
 							},
 							&cli.BoolFlag{
 								Name:  "all",
