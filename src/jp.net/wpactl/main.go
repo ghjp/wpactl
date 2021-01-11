@@ -258,6 +258,14 @@ func (ce *cliExtended) show_status() {
 	}
 }
 
+func (ce *cliExtended) set_interface_property(name string, value interface{}) {
+	_, oip := ce.get_obj_iface_path_of_iface()
+	bo := ce.Object(DbusService, oip)
+	if err := bo.SetProperty(DbusIface+".Interface."+name, dbus.MakeVariant(value)); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	conn, err := dbus.SystemBus()
 	if err != nil {
@@ -282,10 +290,42 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name: "interface",
-				Action: func(c *cli.Context) error {
-					ce.Context = c
-					list_ifaces(ce.get_managed_ifaces())
-					return nil
+				Subcommands: []*cli.Command{
+					{
+						Name: "list",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							list_ifaces(ce.get_managed_ifaces())
+							return nil
+						},
+						Usage: "list managed networks",
+					},
+					{
+						Name: "set",
+						Action: func(c *cli.Context) error {
+							ce.Context = c
+							if apscan := ce.Int("ap_scan"); apscan >= 0 {
+								ce.set_interface_property("ApScan", uint32(apscan))
+							}
+							if country := ce.String("country"); len(country) > 0 {
+								ce.set_interface_property("Country", country)
+							}
+							return nil
+						},
+						Flags: []cli.Flag{
+							&cli.IntFlag{
+								Name:  "ap_scan",
+								Usage: "AP scanning/selection: 0, 1 or 2 are valid values",
+								Value: -1,
+							},
+							&cli.StringFlag{
+								Name:  "country",
+								Usage: "The ISO/IEC alpha2 country code",
+							},
+						},
+						Usage:     "set properties",
+						ArgsUsage: "<ifname>",
+					},
 				},
 				Usage: "list managed network interfaces",
 			},
