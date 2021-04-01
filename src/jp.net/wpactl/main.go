@@ -385,11 +385,11 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:  "driver",
-						Usage: "Driver name which the interface uses, e.g., nl80211",
+						Usage: "Driver name which the interface uses, e.g. ´nl80211´ or ´wired´",
 					},
 					&cli.StringFlag{
 						Name:  "bridge",
-						Usage: "Name of the bridge interface to control, e.g., br0",
+						Usage: "Name of the bridge interface to control, e.g. br0",
 					},
 				},
 				Usage:       "bring up network interface",
