@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -379,7 +380,7 @@ func main() {
 					&cli.PathFlag{
 						Name:      "config",
 						TakesFile: true,
-						Value:     "/etc/wpa_supplicant/wpa_supplicant.conf",
+						Value:     os.DevNull,
 						Usage:     "Configuration file path",
 					},
 					&cli.StringFlag{
