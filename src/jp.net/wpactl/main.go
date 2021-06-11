@@ -244,18 +244,18 @@ func (ce *cliExtended) show_status() {
 			fmt.Printf("%-16s %v\n", "signal", signal)
 			fmt.Printf("%-16s %v\n", "privacy", privacy)
 			fmt.Printf("%-16s %vs\n", "age", age)
-			if iface, err := net.InterfaceByName(ifn); err == nil {
-				if addrlist, err := iface.Addrs(); err == nil {
-					for idx, name := range addrlist {
-						fmt.Printf("%-16s %s\n", "ipaddr"+strconv.Itoa(idx), name)
-					}
-				} else {
-					log.Fatal(err)
-				}
-			} else {
-				log.Fatal(err)
-			}
 		}
+	}
+	if iface, err := net.InterfaceByName(ifn); err == nil {
+		if addrlist, err := iface.Addrs(); err == nil {
+			for idx, name := range addrlist {
+				fmt.Printf("%-16s %s\n", "ipaddr"+strconv.Itoa(idx), name)
+			}
+		} else {
+			log.Fatal(err)
+		}
+	} else {
+		log.Fatal(err)
 	}
 }
 
