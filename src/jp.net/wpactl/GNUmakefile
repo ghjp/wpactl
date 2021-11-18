@@ -1,4 +1,4 @@
-.PHONY: all clean tag
+.PHONY: all clean tag install
 
 ARCH ?= amd64
 ifeq ($(ARCH),arm)
@@ -19,6 +19,7 @@ DEBIAN_DESTDIR := $(CURDIR)/debuild.d
 USR_BIN_DIR = /usr/bin
 DEB_USR_BIN_DIR = $(DEBIAN_DESTDIR)$(USR_BIN_DIR)
 PKG_DIR = $(CURDIR)/pkgs
+PKG_FILE = $(PKG_DIR)/$(PN)_$(PV)+sloppy_$(DEBARCH).deb
 
 all:
 	$(MAKE) clean
@@ -48,3 +49,6 @@ clean:
 
 tag:
 	git tag v$(PV)
+
+install: all
+	pkexec apt-get install --reinstall $(PKG_FILE)
