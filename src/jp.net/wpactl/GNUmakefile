@@ -2,13 +2,13 @@
 
 ARCH ?= amd64
 ifeq ($(ARCH),arm)
-	DEBARCH=armhf
-	GOARCH = arm GOARM=7
-	CROSS_COMPILE=arm-linux-gnueabihf-
+DEBARCH=armhf
+GOARCH = arm GOARM=7
+CROSS_COMPILE=arm-linux-gnueabihf-
 else
-	DEBARCH=amd64
-	GOARCH=$(ARCH)
-	CROSS_COMPILE=x86_64-linux-gnu-
+DEBARCH=amd64
+GOARCH=$(ARCH)
+CROSS_COMPILE=x86_64-linux-gnu-
 endif
 PV = 0.0.2
 PN = wpactl
