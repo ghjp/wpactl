@@ -1,14 +1,16 @@
 .PHONY: all clean tag install
 
-ARCH ?= amd64
+ARCH ?= $(shell go env GOARCH)
 ifeq ($(ARCH),arm)
 DEBARCH=armhf
-GOARCH = arm GOARM=7
+GOARCH = $(ARCH) GOARM=7
 CROSS_COMPILE=arm-linux-gnueabihf-
-else
-DEBARCH=amd64
+else ifeq ($(ARCH),amd64)
+DEBARCH=$(ARCH)
 GOARCH=$(ARCH)
 CROSS_COMPILE=x86_64-linux-gnu-
+else
+$(error $(ARCH) is not supported yet)
 endif
 PV = 0.0.2
 PN = wpactl
