@@ -38,6 +38,7 @@ all:
 		echo Section: net; \
 		echo Priority: optional; \
 		echo 'Maintainer: $(DEBFULLNAME) <$(DEBEMAIL)>'; \
+		echo Installed-Size: `du --summarize $(DEBIAN_DESTDIR) | cut --fields=1`; \
 		echo Depends: libc6, wpasupplicant; \
 		echo Version: $(PV)+sloppy; \
 		echo Description: $(DESCRIPTION); \
