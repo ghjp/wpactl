@@ -16,7 +16,7 @@ PV = 0.0.2
 PN = wpactl
 DESCRIPTION = Control WPA supplicant through d-bus interface
 GO_PATH = $(CURDIR)/../../..
-GO_CALL := GOPATH=$(GO_PATH) GOARCH=$(GOARCH) go
+GO_CALL := GOARCH=$(GOARCH) go
 DEBIAN_DESTDIR := $(CURDIR)/debuild.d
 USR_BIN_DIR = /usr/bin
 DEB_USR_BIN_DIR = $(DEBIAN_DESTDIR)$(USR_BIN_DIR)
