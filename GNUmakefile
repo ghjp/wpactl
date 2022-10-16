@@ -1,4 +1,4 @@
-.PHONY: all clean tag install
+.PHONY: deb clean tag install bin
 
 ARCH ?= $(shell go env GOARCH)
 ifeq ($(ARCH),arm)
@@ -15,7 +15,6 @@ endif
 PV = 0.0.2
 PN = wpactl
 DESCRIPTION = Control WPA supplicant through d-bus interface
-GO_PATH = $(CURDIR)/../../..
 GO_CALL := GOARCH=$(GOARCH) go
 DEBIAN_DESTDIR := $(CURDIR)/debuild.d
 USR_BIN_DIR = /usr/bin
@@ -23,11 +22,12 @@ DEB_USR_BIN_DIR = $(DEBIAN_DESTDIR)$(USR_BIN_DIR)
 PKG_DIR = $(CURDIR)/pkgs
 PKG_FILE = $(PKG_DIR)/$(PN)_$(PV)+sloppy_$(DEBARCH).deb
 
-all:
-	$(MAKE) clean
+bin:
 	$(GO_CALL) build
+
+deb: clean bin
 	install -D --strip --strip-program=$(CROSS_COMPILE)strip --mode=755 --target-directory=$(DEB_USR_BIN_DIR) $(PN)
-	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/usr/share/doc/$(PN) $(GO_PATH)/README.md $(GO_PATH)/LICENSE
+	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/usr/share/doc/$(PN) README.md LICENSE
 	install --mode 644 -D wpactl-completion $(DEBIAN_DESTDIR)/usr/share/bash-completion/completions/wpactl
 	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/lib/udev/rules.d 94-wpactl.rules
 	install --mode 644 -D --target-directory=$(DEBIAN_DESTDIR)/lib/systemd/system wpactl@.service
@@ -53,5 +53,5 @@ clean:
 tag:
 	git tag v$(PV)
 
-install: all
+install: deb
 	pkexec apt-get install --reinstall $(PKG_FILE)
