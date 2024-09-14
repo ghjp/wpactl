@@ -45,3 +45,15 @@ The newer and more secure WPA3-personal auth method is configured as following
 #### IEEE 802.1X using EAP authentication
 
 `wpactl networks add --key_mgmt IEEE8021X --eap TLS --identity host/myhost.example.com --client_cert mycert.pem --private_key TopSecret wlan0`
+
+### Access point mode (AP)
+
+With this mode you can create your own wlan access point. The wlan network card must support this mode.
+
+`wpactl networks add --ssid MyOwnWlanNet --mode 2 --key_mgmt WPA-PSK --psk 1234567890 --frequency 2432 wlan0`
+
+## Activation
+
+After loading all the network configurations into the wpa_supplicant daemon, you can trigger the wpa_supplicant service to perform a network connection.
+
+`wpactl reassociate wlan0`
