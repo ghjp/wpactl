@@ -21,3 +21,27 @@ To build a package for armv7 machines execute the following
 `make deb ARCH=arm`
 
 If you want to use the tool as a normal user the user must be part of the group ´netdev´. This can be done by `adduser username netdev`.
+
+## Usage
+
+### Infrastructure mode
+
+This mode is the normal one. You connect to a wlan access point (AP).
+
+#### Add any WLAN without password authentification
+
+`wpactl networks add --key_mgmt NONE --prio 1 wlan0`
+
+#### Add a WLAN with a preshared key (aka password/phasephrase)
+
+The first example is the widely used procedure WPA2 auth method
+
+`wpactl networks add --ssid NetworkAP --key_mgmt WPA-PSK --pairwise CCMP --psk pw12345678 wlan0`
+
+The newer and more secure WPA3-personal auth method is configured as following
+
+`wpactl networks add --ssid NetworkAP --key_mgmt SAE --ieee80211w 2 --sae_password pw12345678 wlan0`
+
+#### IEEE 802.1X using EAP authentication
+
+`wpactl networks add --key_mgmt IEEE8021X --eap TLS --identity host/myhost.example.com --client_cert mycert.pem --private_key TopSecret wlan0`
