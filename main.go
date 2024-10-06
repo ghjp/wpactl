@@ -733,7 +733,7 @@ func main() {
 							_, oip := ce.get_obj_iface_path_of_iface()
 							bo := ce.Object(DbusService, oip)
 							add_args := make(map[string]interface{})
-							for _, s := range []string{"psk", "ssid", "proto", "key_mgmt", "pairwise", "eap", "identity", "client_cert", "private_key", "private_key_passwd", "sae_password"} {
+							for _, s := range []string{"psk", "ssid", "bssid", "proto", "key_mgmt", "pairwise", "eap", "identity", "client_cert", "private_key", "private_key_passwd", "sae_password"} {
 								v := ce.String(s)
 								if len(v) > 0 {
 									add_args[s] = v
@@ -765,6 +765,10 @@ func main() {
 							&cli.StringFlag{
 								Name:  "ssid",
 								Usage: "SSID of the entry",
+							},
+							&cli.StringFlag{
+								Name:  "bssid",
+								Usage: "BSSID of the entry",
 							},
 							&cli.StringFlag{
 								Name:  "psk",
