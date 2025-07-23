@@ -50,7 +50,7 @@ The newer and more secure WPA3-personal auth method is configured as following
 
 With this mode you can create your own wlan access point. The wlan network card must support this mode.
 
-`wpactl networks add --ssid MyOwnWlanNet --mode 2 --key_mgmt WPA-PSK --psk 1234567890 --frequency 2432 wlan0`
+`wpactl networks add --ssid MyOwnWlanNet --mode 2 --frequency 2432 --key_mgmt WPA-PSK --pairwise CCMP --proto RSN --psk 1234567890  wlan0`
 
 ## Activation
 
