@@ -175,10 +175,14 @@ func (ce *cliExtended) network_show_list() {
 	fmt.Println(header)
 	for i, nwobj := range ce.network_get_obj_list() {
 		nprops := ce.get_network_properties(nwobj)
+		ssid_elem, ok := nprops["ssid"]
+		if !ok {
+			ssid_elem = nprops["bssid"]
+		}
 		if long_listing {
-			fmt.Printf("% 2d %-32v %-3v %v\n", i, nprops["ssid"].Value(), nprops["disabled"], nwobj)
+			fmt.Printf("% 2d %-32v %-3v %v\n", i, ssid_elem.Value(), nprops["disabled"], nwobj)
 		} else {
-			fmt.Printf("% 2d %-32v %-3v\n", i, nprops["ssid"].Value(), nprops["disabled"])
+			fmt.Printf("% 2d %-32v %-3v\n", i, ssid_elem.Value(), nprops["disabled"])
 		}
 	}
 }
