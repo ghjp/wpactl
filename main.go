@@ -168,9 +168,9 @@ func (ce *cliExtended) network_show_list() {
 	long_listing := ce.Bool("long")
 	var header string
 	if long_listing {
-		header = "Id SSID                             Dis dbus-obj-path\n====================================================="
+		header = "Id SSID                             Prio Dis dbus-obj-path\n=========================================================="
 	} else {
-		header = "Id SSID                             Dis\n======================================="
+		header = "Id SSID                             Prio Dis\n============================================"
 	}
 	fmt.Println(header)
 	for i, nwobj := range ce.network_get_obj_list() {
@@ -180,9 +180,9 @@ func (ce *cliExtended) network_show_list() {
 			ssid_elem = nprops["bssid"]
 		}
 		if long_listing {
-			fmt.Printf("% 2d %-32v %-3v %v\n", i, ssid_elem.Value(), nprops["disabled"], nwobj)
+			fmt.Printf("% 2d %-32v %4v %-3v %v\n", i, ssid_elem.Value(), nprops["priority"], nprops["disabled"], nwobj)
 		} else {
-			fmt.Printf("% 2d %-32v %-3v\n", i, ssid_elem.Value(), nprops["disabled"])
+			fmt.Printf("% 2d %-32v %4v %-3v\n", i, ssid_elem.Value(), nprops["priority"], nprops["disabled"])
 		}
 	}
 }
